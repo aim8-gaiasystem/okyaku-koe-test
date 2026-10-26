@@ -22,12 +22,26 @@ export function keyProblem() {
   return '';
 }
 
-// 合言葉とキーの確認。問題があれば応答を返して true を返す
-export function guard(req, res) {
+// 合言葉から役割を決める。admin（管理者）は staff（入力）の操作もできる
+export function roleOf(req) {
+  const given = req.headers['x-passcode'] || '';
+  const admin = process.env.ADMIN_PASSCODE;
+  const staff = process.env.APP_PASSCODE;
+  if (admin && given === admin) return 'admin';
+  if (!staff || given === staff) return 'staff';
+  return null;
+}
+
+// 合言葉とキーの確認。need は 'staff' または 'admin'。問題があれば応答を返して true を返す
+export function guard(req, res, need = 'staff') {
   const problem = keyProblem();
   if (problem) { res.status(500).json({ error: problem }); return true; }
-  const passcode = process.env.APP_PASSCODE;
-  if (passcode && req.headers['x-passcode'] !== passcode) {
+  if (need === 'admin' && !process.env.ADMIN_PASSCODE) {
+    res.status(500).json({ error: 'Vercelに ADMIN_PASSCODE（管理者用の合言葉）が設定されていません' });
+    return true;
+  }
+  const role = roleOf(req);
+  if (!role || (need === 'admin' && role !== 'admin')) {
     res.status(401).json({ error: '合言葉が違います' });
     return true;
   }

@@ -2,7 +2,7 @@
 // 必要な環境変数：ANTHROPIC_API_KEY / SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY
 // 任意：APP_PASSCODE（設定すると、合言葉を知っている人だけが使える）
 
-import { CATEGORIES, OUTCOMES, SECTIONS, guard, supabase, claude, parseJson } from './_lib.js';
+import { CATEGORIES, OUTCOMES, SECTIONS, guard, roleOf, supabase, claude, parseJson } from './_lib.js';
 
 async function classify(content, section) {
   const text = await claude({
@@ -25,7 +25,22 @@ export default async function handler(req, res) {
   if (guard(req, res)) return;
 
   try {
+    // 入力用の画面向け：今月集まった件数だけを返す（中身は返さない）
+    if (req.method === 'GET' && req.query && req.query.count === 'month') {
+      const now = new Date(Date.now() + 9 * 3600 * 1000); // 日本時間
+      const start = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}-01T00:00:00+09:00`;
+      const r = await supabase(`voices?select=id&created_at=gte.${encodeURIComponent(start)}`, {
+        method: 'HEAD',
+        headers: { Prefer: 'count=exact' },
+      });
+      const range = r.headers.get('content-range') || '';
+      const total = Number(range.split('/')[1]) || 0;
+      return res.status(200).json({ month: start.slice(0, 7), count: total });
+    }
+
     if (req.method === 'GET') {
+      // 記録の一覧は管理者だけが見られる
+      if (roleOf(req) !== 'admin') return res.status(403).json({ error: '記録の一覧は管理者だけが見られます' });
       const r = await supabase('voices?select=*&order=created_at.desc&limit=50');
       if (!r.ok) throw new Error(`一覧の取得に失敗しました（${r.status}）`);
       return res.status(200).json(await r.json());

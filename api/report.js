@@ -171,7 +171,7 @@ async function fetchActions(reportId) {
 }
 
 export default async function handler(req, res) {
-  if (guard(req, res)) return;
+  if (guard(req, res, 'admin')) return;
 
   try {
     const month = String((req.method === 'GET' ? req.query.month : req.body && req.body.month) || '');

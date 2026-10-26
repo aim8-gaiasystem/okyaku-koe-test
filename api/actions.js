@@ -6,7 +6,7 @@ import { guard, supabase } from './_lib.js';
 const STATUSES = ['未決定', 'やる', '見送り', '実施済み'];
 
 export default async function handler(req, res) {
-  if (guard(req, res)) return;
+  if (guard(req, res, 'admin')) return;
 
   try {
     if (req.method !== 'PATCH') {

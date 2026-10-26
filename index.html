@@ -5,58 +5,27 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>お客様の声メモ</title>
 <style>
-  :root { --ink:#1f2328; --sub:#59636e; --line:#d0d7de; --bg:#f6f8fa; --accent:#1f6feb; --soft:#ddf4ff; --warn:#fff8c5; }
+  :root { --ink:#1f2328; --sub:#59636e; --line:#d0d7de; --bg:#f6f8fa; --accent:#1f6feb; --soft:#ddf4ff; }
   * { box-sizing: border-box; }
   body { margin:0; font-family: -apple-system, "Hiragino Sans", "Yu Gothic", sans-serif; color:var(--ink); background:var(--bg); font-size:17px; line-height:1.6; }
-  main { max-width:680px; margin:0 auto; padding:16px; }
+  main { max-width:560px; margin:0 auto; padding:16px; }
   h1 { font-size:22px; margin:8px 0 12px; }
-  h2 { font-size:18px; margin:20px 0 8px; }
-  .tabs { display:flex; gap:8px; margin-bottom:16px; }
-  .tabs button { flex:1; margin:0; padding:12px; font-size:16px; background:#fff; color:var(--ink); border:1px solid var(--line); }
-  .tabs button.on { background:var(--accent); color:#fff; border-color:var(--accent); }
   .card { background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:16px; }
   label.ttl { display:block; font-weight:bold; margin:12px 0 6px; }
   label.ttl:first-child { margin-top:0; }
-  textarea, input, select { width:100%; font-size:17px; padding:12px; border:1px solid var(--line); border-radius:8px; font-family:inherit; background:#fff; }
-  textarea { min-height:110px; resize:vertical; }
+  textarea, input { width:100%; font-size:17px; padding:12px; border:1px solid var(--line); border-radius:8px; font-family:inherit; background:#fff; }
+  textarea { min-height:130px; resize:vertical; }
   button { width:100%; margin-top:12px; padding:14px; font-size:18px; font-weight:bold; color:#fff; background:var(--accent); border:none; border-radius:8px; }
   button:disabled { opacity:.6; }
   .chips { display:flex; flex-wrap:wrap; gap:8px; }
   .chips button { width:auto; margin:0; padding:8px 14px; font-size:15px; font-weight:normal; background:#fff; color:var(--ink); border:1px solid var(--line); border-radius:999px; }
   .chips button.on { background:var(--soft); color:#0550ae; border-color:#54aeff; font-weight:bold; }
   .msg { margin-top:8px; font-size:15px; color:#cf222e; min-height:1em; }
-  .item { border-top:1px solid var(--line); padding:12px 0; }
-  .item:first-child { border-top:none; }
-  .tag { display:inline-block; font-size:13px; padding:2px 10px; border-radius:999px; background:var(--soft); color:#0550ae; margin:0 6px 4px 0; }
-  .tag.gray { background:#eaeef2; color:var(--sub); }
-  .tag.decl { background:#ffebe9; color:#a40e26; }
-  .summary { font-weight:bold; }
-  .meta { font-size:13px; color:var(--sub); margin-top:4px; }
-  .raw { font-size:14px; color:var(--sub); margin-top:4px; white-space:pre-wrap; }
-  .stat { display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:8px; }
-  .stat div { background:var(--bg); border-radius:8px; padding:10px; }
-  .stat b { display:block; font-size:22px; }
-  .bar { display:flex; align-items:center; gap:8px; font-size:15px; margin:4px 0; }
-  .bar span:first-child { width:80px; flex:none; }
-  .bar i { display:block; height:12px; background:var(--accent); border-radius:6px; }
-  .bar b, .bar em { white-space:nowrap; }
-  .bar em { font-style:normal; color:var(--sub); font-size:13px; }
-  .theme { border-left:4px solid var(--accent); padding:4px 0 4px 12px; margin:12px 0; }
-  .theme .q { font-size:14px; color:var(--sub); margin:2px 0; }
-  ul { margin:4px 0; padding-left:20px; }
-  .act { border:1px solid var(--line); border-radius:10px; padding:12px; margin:10px 0; }
-  .act .head { display:flex; gap:10px; align-items:baseline; }
-  .act .rank { flex:none; width:28px; height:28px; border-radius:50%; background:var(--accent); color:#fff; font-weight:bold; display:flex; align-items:center; justify-content:center; font-size:15px; }
-  .act .name { font-weight:bold; font-size:17px; }
-  .act .scores { display:flex; flex-wrap:wrap; gap:6px; margin:8px 0; }
-  .act .scores span { font-size:13px; background:var(--bg); border-radius:6px; padding:2px 8px; }
-  .act .row { font-size:15px; margin:2px 0; }
-  .act .row b { color:var(--sub); font-weight:normal; }
-  .status { display:flex; gap:6px; margin-top:10px; }
-  .status button { flex:1; margin:0; padding:8px 4px; font-size:14px; font-weight:normal; background:#fff; color:var(--ink); border:1px solid var(--line); }
-  .status button.on { background:var(--soft); color:#0550ae; border-color:#54aeff; font-weight:bold; }
-  .rv { border-left:4px solid #8c959f; padding:4px 0 4px 12px; margin:8px 0; font-size:15px; }
-  #passbox, #page-report { display:none; }
+  .thanks { display:none; background:#dafbe1; color:#116329; border-radius:8px; padding:12px; margin-top:12px; font-weight:bold; }
+  .count { text-align:center; color:var(--sub); }
+  .count b { display:block; font-size:30px; color:var(--ink); }
+  .note { font-size:13px; color:var(--sub); margin:6px 0 0; }
+  #passbox { display:none; }
 </style>
 </head>
 <body>
@@ -69,36 +38,24 @@
     <button id="passbtn" type="button">開く</button>
   </div>
 
-  <div class="tabs">
-    <button type="button" id="tab-record" class="on">記録する</button>
-    <button type="button" id="tab-report">月次レポート</button>
+  <div class="card">
+    <label class="ttl" for="content">お客様の声・困りごと</label>
+    <textarea id="content" placeholder="例：お惣菜の量が多すぎて一人暮らしには買いにくい、と言われた"></textarea>
+    <p class="note">お客様のお名前や電話番号は書かないでください</p>
+    <label class="ttl">売場</label>
+    <div class="chips" id="sections"></div>
+    <label class="ttl">対応結果</label>
+    <div class="chips" id="outcomes"></div>
+    <button id="send" type="button">記録する</button>
+    <div class="msg" id="msg"></div>
+    <div class="thanks" id="thanks">記録しました。ありがとうございます</div>
   </div>
 
-  <section id="page-record">
-    <div class="card">
-      <label class="ttl" for="content">お客様の声・困りごと</label>
-      <textarea id="content" placeholder="例：お惣菜の量が多すぎて一人暮らしには買いにくい、と言われた"></textarea>
-      <label class="ttl">売場</label>
-      <div class="chips" id="sections"></div>
-      <label class="ttl">対応結果</label>
-      <div class="chips" id="outcomes"></div>
-      <button id="send" type="button">記録する</button>
-      <div class="msg" id="msg"></div>
-    </div>
-    <div class="card"><div id="list">読み込み中…</div></div>
-  </section>
-
-  <section id="page-report">
-    <div class="card">
-      <label class="ttl" for="month">対象の月</label>
-      <input id="month" type="month">
-      <label class="ttl" for="context">お店の事情（任意）</label>
-      <textarea id="context" style="min-height:80px" placeholder="例：夕方は人手が足りない。今月は設備にお金をかけられない。駐車場の工事は来年予定"></textarea>
-      <button id="make" type="button">この月のレポートを作る</button>
-      <div class="msg" id="rmsg"></div>
-    </div>
-    <div class="card" id="report">月を選ぶと、作成済みのレポートが表示されます</div>
-  </section>
+  <div class="card count">
+    今月集まった声
+    <b id="count">―</b>
+    <span class="note">みなさんの声は、毎月まとめて改善に活かします</span>
+  </div>
 </main>
 <script>
   const SECTIONS = ['惣菜','青果','鮮魚','精肉','日配','加工食品','日用品','レジ','駐車場','その他'];
@@ -135,180 +92,42 @@
     return data;
   }
 
-  async function load() {
+  async function loadCount() {
     try {
-      const rows = await api('/api/voices', 'GET');
+      const d = await api('/api/voices?count=month', 'GET');
       $('passbox').style.display = 'none';
-      $('list').innerHTML = rows.length ? rows.map(r => `
-        <div class="item">
-          <span class="tag">${esc(r.category || '未分類')}</span>${r.section ? `<span class="tag gray">${esc(r.section)}</span>` : ''}${r.outcome ? `<span class="tag ${r.outcome === 'お断りした' ? 'decl' : 'gray'}">${esc(r.outcome)}</span>` : ''}
-          <div class="summary">${esc(r.summary || '')}</div>
-          <div class="raw">${esc(r.content)}</div>
-          <div class="meta">${new Date(r.created_at).toLocaleString('ja-JP')}</div>
-        </div>`).join('') : 'まだ記録はありません';
-    } catch (e) { $('list').textContent = e.message; }
+      $('count').textContent = `${d.count}件`;
+    } catch (e) { $('msg').textContent = e.message; }
+  }
+
+  function resetChips() {
+    section = ''; outcome = '';
+    document.querySelectorAll('.chips button').forEach(x => x.classList.remove('on'));
   }
 
   $('send').addEventListener('click', async () => {
     const content = $('content').value.trim();
-    $('msg').textContent = '';
+    $('msg').textContent = ''; $('thanks').style.display = 'none';
     if (!content) { $('msg').textContent = '内容を入力してください'; return; }
-    $('send').disabled = true; $('send').textContent = 'AIが分類中…';
+    $('send').disabled = true; $('send').textContent = '記録しています…';
     try {
       await api('/api/voices', 'POST', { content, section, outcome });
-      $('content').value = '';
-      await load();
+      $('content').value = ''; resetChips();
+      $('thanks').style.display = 'block';
+      await loadCount();
     } catch (e) { $('msg').textContent = e.message; }
     $('send').disabled = false; $('send').textContent = '記録する';
   });
-  $('content').addEventListener('input', () => { $('msg').textContent = ''; });
-
-  function bars(obj, prev) {
-    const entries = Object.entries(obj).sort((a, b) => b[1] - a[1]);
-    const max = Math.max(1, ...entries.map(e => e[1]));
-    return entries.map(([k, v]) => {
-      const p = prev ? (prev[k] || 0) : null;
-      const diff = p === null ? '' : `<em>（前月 ${p}件）</em>`;
-      return `<div class="bar"><span>${esc(k)}</span><i style="width:${Math.round(v / max * 60)}%"></i><b>${v}件</b>${diff}</div>`;
-    }).join('');
-  }
-  const list = (arr) => (arr && arr.length) ? `<ul>${arr.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : '<p class="meta">なし</p>';
-
-  const STATUSES = ['やる', '見送り', '実施済み'];
-  const stars = (n) => '★'.repeat(Number(n) || 0) + '☆'.repeat(5 - (Number(n) || 0));
-
-  function actCard(a, i, isService) {
-    const d = a.data || {};
-    return `
-      <div class="act" data-id="${a.id}">
-        <div class="head"><span class="rank">${i + 1}</span><span class="name">${esc(a.title)}</span></div>
-        <div class="scores">
-          <span>効果 ${stars(d.impact)}</span><span>手軽さ ${stars(d.ease)}</span>
-          <span>費用 ${esc(d.cost)}</span><span>開始 ${esc(d.start)}</span>
-        </div>
-        <div class="row"><b>理由：</b>${esc(d.reason)}</div>
-        ${isService
-          ? `<div class="row"><b>まず試す：</b>${esc(d.trial)}</div>`
-          : `<div class="row"><b>担当：</b>${esc(d.owner)}　<b>期限：</b>${esc(d.due)}</div>`}
-        <div class="row"><b>確かめ方：</b>${esc(d.measure)}</div>
-        <div class="status">${STATUSES.map(s => `<button type="button" data-s="${s}" class="${a.status === s ? 'on' : ''}">${s}</button>`).join('')}</div>
-      </div>`;
-  }
-
-  function renderActions(actions, kind) {
-    const list = (actions || []).filter(a => a.kind === kind).sort((a, b) => (b.data?.score || 0) - (a.data?.score || 0));
-    return list.length ? list.map((a, i) => actCard(a, i, kind === 'service')).join('') : '<p class="meta">なし</p>';
-  }
-
-  $('report').addEventListener('click', async (e) => {
-    const b = e.target.closest('.status button'); if (!b) return;
-    const card = b.closest('.act');
-    const next = b.classList.contains('on') ? '未決定' : b.dataset.s;
-    try {
-      await api('/api/actions', 'PATCH', { id: Number(card.dataset.id), status: next });
-      card.querySelectorAll('.status button').forEach(x => x.classList.toggle('on', x.dataset.s === next));
-    } catch (err) { $('rmsg').textContent = err.message; }
-  });
-
-  function render(row) {
-    if (!row) { $('report').innerHTML = 'この月のレポートはまだありません。上のボタンで作れます'; return; }
-    const { stats: s, ai } = row.content;
-    if (row.content.version === 2) { renderV2(row, s, ai); return; }
-    $('report').innerHTML = `
-      <div class="meta">作成：${new Date(row.created_at).toLocaleString('ja-JP')}</div>
-      <h2>今月の要点</h2>${list(ai.highlights)}
-      <h2>件数</h2>
-      <div class="stat">
-        <div>記録の件数<b>${s.total}件</b><span class="meta">前月 ${s.prevTotal}件</span></div>
-        <div>お断りした件数<b>${s.byOutcome['お断りした'] || 0}件</b></div>
-      </div>
-      <h2>分類ごと</h2>${bars(s.byCategory, s.prevByCategory)}
-      <h2>売場ごと</h2>${bars(s.bySection)}
-      <h2>注目テーマ</h2>
-      ${(ai.themes || []).map(t => `
-        <div class="theme">
-          <div class="summary">${esc(t.title)}（${esc(t.count)}件）</div>
-          ${(t.examples || []).map(q => `<div class="q">「${esc(q)}」</div>`).join('')}
-          <div><b>見立て：</b>${esc(t.cause)}</div>
-          <div><b>打ち手：</b>${esc(t.action)}</div>
-        </div>`).join('') || '<p class="meta">なし</p>'}
-      <h2>お断りした要望（新商品・サービスの種）</h2>
-      ${(ai.declined || []).length ? `<ul>${ai.declined.map(d => `<li><b>${esc(d.request)}</b>（${esc(d.count)}件）<br>→ ${esc(d.idea)}</li>`).join('')}</ul>` : '<p class="meta">なし</p>'}
-      <h2>すぐできる改善</h2>${list(ai.quick_wins)}
-      <h2>検討したい新商品・サービス</h2>${list(ai.new_ideas)}
-      <h2>来月確かめること</h2>${list(ai.next_checks)}`;
-  }
-
-  function renderV2(row, s, ai) {
-    $('report').innerHTML = `
-      <div class="meta">作成：${new Date(row.created_at).toLocaleString('ja-JP')}</div>
-      ${row.content.context ? `<div class="meta">踏まえたお店の事情：${esc(row.content.context)}</div>` : ''}
-      <h2>今月の要点</h2>${list(ai.highlights)}
-      <h2>今月やること（優先順）</h2>
-      <p class="meta">効果・手軽さ・費用・始めやすさから優先順を決めています。決めたら「やる／見送り／実施済み」を押してください。翌月のレポートで振り返ります。</p>
-      ${renderActions(row.actions, 'action')}
-      ${(ai.later || []).length ? `<h2>余力があればやること</h2>${list(ai.later)}` : ''}
-      <h2>新商品・新サービスの案（優先順）</h2>
-      ${renderActions(row.actions, 'service')}
-      ${(ai.review || []).length ? `<h2>先月の提案の振り返り</h2>${ai.review.map(r => `<div class="rv"><b>${esc(r.title)}</b>（${esc(r.status)}）<br>${esc(r.comment)}</div>`).join('')}` : ''}
-      <h2>件数</h2>
-      <div class="stat">
-        <div>記録の件数<b>${s.total}件</b><span class="meta">前月 ${s.prevTotal}件</span></div>
-        <div>お断りした件数<b>${s.byOutcome['お断りした'] || 0}件</b></div>
-      </div>
-      <h2>分類ごと</h2>${bars(s.byCategory, s.prevByCategory)}
-      <h2>売場ごと</h2>${bars(s.bySection)}
-      <h2>注目テーマ</h2>
-      ${(ai.themes || []).map(t => `
-        <div class="theme">
-          <div class="summary">${esc(t.title)}（${esc(t.count)}件）</div>
-          ${(t.examples || []).map(q => `<div class="q">「${esc(q)}」</div>`).join('')}
-          <div><b>見立て：</b>${esc(t.cause)}</div>
-        </div>`).join('') || '<p class="meta">なし</p>'}
-      <h2>お断りした要望</h2>
-      ${(ai.declined || []).length ? `<ul>${ai.declined.map(d => `<li>${esc(d.request)}（${esc(d.count)}件）</li>`).join('')}</ul>` : '<p class="meta">なし</p>'}
-      <h2>来月確かめること</h2>${list(ai.next_checks)}`;
-  }
-
-  async function loadReport() {
-    $('rmsg').textContent = '';
-    try { render(await api(`/api/report?month=${$('month').value}`, 'GET')); }
-    catch (e) { $('report').textContent = e.message; }
-  }
-
-  $('make').addEventListener('click', async () => {
-    $('rmsg').textContent = '';
-    if (!$('month').value) { $('rmsg').textContent = '月を選んでください'; return; }
-    $('make').disabled = true; $('make').textContent = 'AIが分析中…（30秒ほど）';
-    const context = $('context').value.trim();
-    try { localStorage.setItem('context', context); } catch (e) {}
-    try { render(await api('/api/report', 'POST', { month: $('month').value, context })); }
-    catch (e) { $('rmsg').textContent = e.message; }
-    $('make').disabled = false; $('make').textContent = 'この月のレポートを作る';
-  });
-  $('month').addEventListener('change', loadReport);
-
-  function show(tab) {
-    const rec = tab === 'record';
-    $('page-record').style.display = rec ? 'block' : 'none';
-    $('page-report').style.display = rec ? 'none' : 'block';
-    $('tab-record').classList.toggle('on', rec);
-    $('tab-report').classList.toggle('on', !rec);
-    if (!rec) loadReport();
-  }
-  $('tab-record').addEventListener('click', () => show('record'));
-  $('tab-report').addEventListener('click', () => show('report'));
+  $('content').addEventListener('input', () => { $('msg').textContent = ''; $('thanks').style.display = 'none'; });
 
   $('passbtn').addEventListener('click', () => {
     passcode = $('pass').value;
     try { localStorage.setItem('passcode', passcode); } catch (e) {}
-    load();
+    $('msg').textContent = '';
+    loadCount();
   });
 
-  try { $('context').value = localStorage.getItem('context') || ''; } catch (e) {}
-  const now = new Date();
-  $('month').value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  load();
+  loadCount();
 </script>
 </body>
 </html>

@@ -13,7 +13,8 @@
 | `ANTHROPIC_API_KEY` | AnthropicのAPIキー |
 | `SUPABASE_URL` | SupabaseのProject URL |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabaseのservice_roleキー（秘密。画面側には出さない） |
-| `APP_PASSCODE`（任意） | 合言葉。設定すると、知っている人だけが使える |
+| `APP_PASSCODE` | 入力用の合言葉（店舗スタッフ用）。記録と、今月の件数だけが使える |
+| `ADMIN_PASSCODE` | 管理者用の合言葉（本社用）。`/admin.html` で記録の一覧・月次レポート・提案の操作ができる |
 
 ## Supabaseの表
 
