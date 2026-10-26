@@ -51,7 +51,28 @@ async function classify(content) {
   return { category, summary };
 }
 
+// 秘密のキーの欄に、公開用のキーが入っていないかを確かめる
+function keyProblem() {
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+  if (!key) return 'SUPABASE_SERVICE_ROLE_KEY が設定されていません';
+  if (key.startsWith('sb_publishable_')) {
+    return 'SUPABASE_SERVICE_ROLE_KEY に公開用のキー（sb_publishable_）が入っています。秘密のキー（sb_secret_）に入れ替えてください';
+  }
+  if (key.startsWith('eyJ')) {
+    try {
+      const payload = JSON.parse(Buffer.from(key.split('.')[1], 'base64').toString());
+      if (payload.role !== 'service_role') {
+        return `SUPABASE_SERVICE_ROLE_KEY に ${payload.role} 用のキーが入っています。service_role のキーに入れ替えてください`;
+      }
+    } catch { /* 判定できない場合はそのまま進める */ }
+  }
+  return '';
+}
+
 export default async function handler(req, res) {
+  const problem = keyProblem();
+  if (problem) return res.status(500).json({ error: problem });
+
   const passcode = process.env.APP_PASSCODE;
   if (passcode && req.headers['x-passcode'] !== passcode) {
     return res.status(401).json({ error: '合言葉が違います' });
