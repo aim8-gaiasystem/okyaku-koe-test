@@ -60,6 +60,41 @@ export async function claude({ model, system, content, maxTokens }) {
   return (data.content || []).map((c) => c.text || '').join('');
 }
 
+// 決まった形式（JSON）で必ず答えさせる呼び出し方。tool の input_schema に沿った結果を返す
+export async function claudeStructured({ model, system, content, maxTokens, tool }) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'x-api-key': process.env.ANTHROPIC_API_KEY,
+      'anthropic-version': '2023-06-01',
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      model,
+      max_tokens: maxTokens,
+      system,
+      tools: [tool],
+      tool_choice: { type: 'tool', name: tool.name },
+      messages: [{ role: 'user', content }],
+    }),
+  });
+  if (!res.ok) {
+    const detail = await res.text();
+    console.error('Anthropic error', res.status, detail);
+    throw new Error(`AIの呼び出しに失敗しました（${res.status}）`);
+  }
+  const data = await res.json();
+  const block = (data.content || []).find((c) => c.type === 'tool_use');
+  if (!block) {
+    console.error('No tool_use block', data.stop_reason, JSON.stringify(data).slice(0, 2000));
+    throw new Error(`AIのレポートを読み取れませんでした（${data.stop_reason || '理由不明'}）`);
+  }
+  if (data.stop_reason === 'max_tokens') {
+    throw new Error('AIのレポートが長すぎて途中で切れました。もう一度お試しください');
+  }
+  return block.input;
+}
+
 export function parseJson(text) {
   const match = text.match(/\{[\s\S]*\}/);
   try { return JSON.parse(match ? match[0] : text); } catch { return null; }

@@ -2,7 +2,7 @@
 // GET  /api/report?month=2026-10 … その月の最新レポートを返す
 // POST /api/report  {month:"2026-10"} … その月の声をAIで分析してレポートを作り、保存する
 
-import { CATEGORIES, guard, supabase, claude, parseJson } from './_lib.js';
+import { CATEGORIES, guard, supabase, claudeStructured } from './_lib.js';
 
 export const config = { maxDuration: 60 };
 
@@ -44,11 +44,49 @@ const SYSTEM =
   '・原因の見立ては断定せず「〜の可能性」と書く\n' +
   '・提案は、お金や人手をあまりかけずに今月すぐできることを優先する\n' +
   '・記録にないことを作らない。件数は与えられた記録から数える\n' +
-  '出力はJSONのみ。形式：\n' +
-  '{"highlights":["今月の要点を3つ、各40字以内"],' +
-  '"themes":[{"title":"テーマ名","count":件数,"examples":["代表的な声を原文から2〜3件"],"cause":"原因の見立て","action":"打ち手"}],' +
-  '"declined":[{"request":"お断りした要望","count":件数,"idea":"新商品・サービスの案"}],' +
-  '"quick_wins":["すぐできる改善"],"new_ideas":["検討したい新商品・サービス"],"next_checks":["来月確かめること"]}';
+  '・各項目は簡潔に。1つの文は60字以内\n' +
+  '結果は save_report ツールで返す。';
+
+const str = { type: 'string' };
+const strList = (desc, max) => ({ type: 'array', description: desc, maxItems: max, items: str });
+const REPORT_TOOL = {
+  name: 'save_report',
+  description: '月次レポートを保存する',
+  input_schema: {
+    type: 'object',
+    required: ['highlights', 'themes', 'declined', 'quick_wins', 'new_ideas', 'next_checks'],
+    properties: {
+      highlights: strList('今月の要点（各40字以内）', 3),
+      themes: {
+        type: 'array', maxItems: 5, description: '注目テーマ（件数の多い順・影響の大きい順）',
+        items: {
+          type: 'object', required: ['title', 'count', 'examples', 'cause', 'action'],
+          properties: {
+            title: { type: 'string', description: 'テーマ名' },
+            count: { type: 'integer', description: '該当する記録の件数' },
+            examples: strList('代表的な声（原文から）', 3),
+            cause: { type: 'string', description: '原因の見立て' },
+            action: { type: 'string', description: '打ち手' },
+          },
+        },
+      },
+      declined: {
+        type: 'array', maxItems: 8, description: 'お断りした要望',
+        items: {
+          type: 'object', required: ['request', 'count', 'idea'],
+          properties: {
+            request: { type: 'string', description: 'お断りした要望' },
+            count: { type: 'integer', description: '件数' },
+            idea: { type: 'string', description: '新商品・サービスの案' },
+          },
+        },
+      },
+      quick_wins: strList('すぐできる改善', 5),
+      new_ideas: strList('検討したい新商品・サービス', 5),
+      next_checks: strList('来月確かめること', 5),
+    },
+  },
+};
 
 export default async function handler(req, res) {
   if (guard(req, res)) return;
@@ -85,14 +123,13 @@ export default async function handler(req, res) {
       const lines = rows.map((r, i) =>
         `${i + 1}. [分類:${r.category || '未分類'}][売場:${r.section || '未記入'}][対応:${r.outcome || '未記入'}] ${r.content}`
       );
-      const text = await claude({
+      const ai = await claudeStructured({
         model: 'claude-sonnet-5-5',
-        maxTokens: 4000,
+        maxTokens: 8000,
         system: SYSTEM,
+        tool: REPORT_TOOL,
         content: `対象月：${month}\n記録件数：${rows.length}件\n\n${lines.join('\n')}`,
       });
-      const ai = parseJson(text);
-      if (!ai) throw new Error('AIのレポートを読み取れませんでした。もう一度お試しください');
 
       const content = { stats, ai, categories: CATEGORIES };
       const r = await supabase('reports', {
