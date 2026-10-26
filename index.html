@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>お客様の声メモ</title>
+<style>
+  :root { --ink:#1f2328; --sub:#59636e; --line:#d0d7de; --bg:#f6f8fa; --accent:#1f6feb; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: -apple-system, "Hiragino Sans", "Yu Gothic", sans-serif; color:var(--ink); background:var(--bg); font-size:17px; line-height:1.6; }
+  main { max-width:640px; margin:0 auto; padding:16px; }
+  h1 { font-size:22px; margin:8px 0 16px; }
+  .card { background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:16px; }
+  textarea, input { width:100%; font-size:17px; padding:12px; border:1px solid var(--line); border-radius:8px; font-family:inherit; }
+  textarea { min-height:120px; resize:vertical; }
+  button { width:100%; margin-top:12px; padding:14px; font-size:18px; font-weight:bold; color:#fff; background:var(--accent); border:none; border-radius:8px; }
+  button:disabled { opacity:.6; }
+  .msg { margin-top:8px; font-size:15px; color:#cf222e; min-height:1em; }
+  .item { border-top:1px solid var(--line); padding:12px 0; }
+  .item:first-child { border-top:none; }
+  .tag { display:inline-block; font-size:13px; padding:2px 10px; border-radius:999px; background:#ddf4ff; color:#0550ae; margin-right:8px; }
+  .summary { font-weight:bold; }
+  .meta { font-size:13px; color:var(--sub); margin-top:4px; }
+  .raw { font-size:14px; color:var(--sub); margin-top:4px; white-space:pre-wrap; }
+  #passbox { display:none; }
+</style>
+</head>
+<body>
+<main>
+  <h1>お客様の声メモ</h1>
+
+  <div class="card" id="passbox">
+    <label for="pass">合言葉</label>
+    <input id="pass" type="password" autocomplete="off">
+    <button id="passbtn" type="button">開く</button>
+  </div>
+
+  <div class="card">
+    <label for="content">お客様の声・困りごと</label>
+    <textarea id="content" placeholder="例：お惣菜の量が多すぎて一人暮らしには買いにくい、と言われた"></textarea>
+    <button id="send" type="button">記録する</button>
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <div class="card">
+    <div id="list">読み込み中…</div>
+  </div>
+</main>
+<script>
+  const $ = (id) => document.getElementById(id);
+  let passcode = '';
+  try { passcode = localStorage.getItem('passcode') || ''; } catch (e) {}
+
+  function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  async function api(method, body) {
+    const res = await fetch('/api/voices', {
+      method,
+      headers: { 'Content-Type': 'application/json', 'x-passcode': passcode },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.status === 401) { $('passbox').style.display = 'block'; throw new Error('合言葉を入力してください'); }
+    if (!res.ok) throw new Error(data.error || 'エラーが発生しました');
+    return data;
+  }
+
+  async function load() {
+    try {
+      const rows = await api('GET');
+      $('passbox').style.display = 'none';
+      $('list').innerHTML = rows.length ? rows.map(r => `
+        <div class="item">
+          <span class="tag">${esc(r.category || '未分類')}</span><span class="summary">${esc(r.summary || '')}</span>
+          <div class="raw">${esc(r.content)}</div>
+          <div class="meta">${new Date(r.created_at).toLocaleString('ja-JP')}</div>
+        </div>`).join('') : 'まだ記録はありません';
+    } catch (e) { $('list').textContent = e.message; }
+  }
+
+  $('send').addEventListener('click', async () => {
+    const content = $('content').value.trim();
+    $('msg').textContent = '';
+    if (!content) { $('msg').textContent = '内容を入力してください'; return; }
+    $('send').disabled = true; $('send').textContent = 'AIが分類中…';
+    try {
+      await api('POST', { content });
+      $('content').value = '';
+      await load();
+    } catch (e) { $('msg').textContent = e.message; }
+    $('send').disabled = false; $('send').textContent = '記録する';
+  });
+
+  $('content').addEventListener('input', () => { $('msg').textContent = ''; });
+
+  $('passbtn').addEventListener('click', () => {
+    passcode = $('pass').value;
+    try { localStorage.setItem('passcode', passcode); } catch (e) {}
+    load();
+  });
+
+  load();
+</script>
+</body>
+</html>

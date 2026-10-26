@@ -1,0 +1,6 @@
+{
+  "name": "okyaku-koe-test",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=18" }
+}
