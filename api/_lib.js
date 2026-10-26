@@ -62,7 +62,7 @@ export async function claude({ model, system, content, maxTokens }) {
 
 // 決まった形式（JSON）で必ず答えさせる呼び出し方。tool の input_schema に沿った結果を返す
 export async function claudeStructured({ model, system, content, maxTokens, tool }) {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+  const call = (toolChoice) => fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
       'x-api-key': process.env.ANTHROPIC_API_KEY,
@@ -72,16 +72,25 @@ export async function claudeStructured({ model, system, content, maxTokens, tool
     body: JSON.stringify({
       model,
       max_tokens: maxTokens,
-      system,
+      system: `${system}\n必ず ${tool.name} ツールを1回だけ使って結果を返すこと。`,
       tools: [tool],
-      tool_choice: { type: 'tool', name: tool.name },
+      tool_choice: toolChoice,
       messages: [{ role: 'user', content }],
     }),
   });
+
+  // まずツールの使用を強制して頼む。受け付けられなければ、任意の指定でやり直す
+  let res = await call({ type: 'tool', name: tool.name });
+  if (res.status === 400) {
+    console.error('Forced tool_choice rejected:', await res.text());
+    res = await call({ type: 'auto' });
+  }
   if (!res.ok) {
     const detail = await res.text();
     console.error('Anthropic error', res.status, detail);
-    throw new Error(`AIの呼び出しに失敗しました（${res.status}）`);
+    let msg = '';
+    try { msg = JSON.parse(detail).error.message; } catch { msg = detail.slice(0, 200); }
+    throw new Error(`AIの呼び出しに失敗しました（${res.status}）：${msg}`);
   }
   const data = await res.json();
   const block = (data.content || []).find((c) => c.type === 'tool_use');
