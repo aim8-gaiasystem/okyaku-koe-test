@@ -7,11 +7,14 @@ const CATEGORIES = ['商品', '接客', '価格', '店内環境', 'その他'];
 function supabase(path, init = {}) {
   const url = `${process.env.SUPABASE_URL}/rest/v1/${path}`;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  // 旧形式（eyJ…で始まるservice_roleキー）はAuthorizationにも入れる。
+  // 新形式（sb_secret_…で始まるSecretキー）はapikeyだけで送る。
+  const auth = key && key.startsWith('eyJ') ? { Authorization: `Bearer ${key}` } : {};
   return fetch(url, {
     ...init,
     headers: {
       apikey: key,
-      Authorization: `Bearer ${key}`,
+      ...auth,
       'Content-Type': 'application/json',
       ...(init.headers || {}),
     },
