@@ -59,7 +59,10 @@ const SYSTEM =
   '店長が「次に何を、どの順でやるか」を決められるレポートを作ります。\n' +
   '・似た内容の声を束ねて「テーマ」にし、件数の多い順・影響の大きい順に最大5つ挙げる\n' +
   '・「お断りした」声は、新商品・新サービスの種として別にまとめる\n' +
-  '・今月やることは、テーマに対する具体的な行動を3〜5つ。効果（1〜5）、手軽さ（1〜5、5が最も手軽）、費用（低・中・高）、' +
+  '・お店の事情（人手・予算・設備など）が与えられた場合は必ず踏まえる。事情に照らして実行が難しい行動は選ばないか、' +
+  '事情の範囲でできる工夫に置き換える\n' +
+  '・今月やることは、店長が実際に動ける数に絞って最大3つ。それ以外の候補は「余力があればやること」に短く書く\n' +
+  '・今月やることは、テーマに対する具体的な行動。効果（1〜5）、手軽さ（1〜5、5が最も手軽）、費用（低・中・高）、' +
   '始めやすさ（今週・今月・来月以降）を付け、担当の目安、期限、効果の確かめ方を書く\n' +
   '・新商品・新サービスの案は2〜3つ。同じ観点で評価し、大きな投資の前に小さく試す方法を必ず書く\n' +
   '・先月の提案とその状況が与えられた場合は、記録と照らして効果を振り返る（声が減ったか、続けるべきか）\n' +
@@ -84,7 +87,7 @@ const REPORT_TOOL = {
   description: '月次レポートを保存する',
   input_schema: {
     type: 'object',
-    required: ['highlights', 'themes', 'declined', 'actions', 'new_services', 'review', 'next_checks'],
+    required: ['highlights', 'themes', 'declined', 'actions', 'later', 'new_services', 'review', 'next_checks'],
     properties: {
       highlights: strList('今月の要点（各40字以内）', 3),
       themes: {
@@ -110,7 +113,7 @@ const REPORT_TOOL = {
         },
       },
       actions: {
-        type: 'array', maxItems: 5, description: '今月やること（改善）',
+        type: 'array', maxItems: 3, description: '今月やること（改善）。最大3つ',
         items: {
           type: 'object', required: ['title', 'reason', 'impact', 'ease', 'cost', 'start', 'owner', 'due', 'measure'],
           properties: {
@@ -138,6 +141,7 @@ const REPORT_TOOL = {
           },
         },
       },
+      later: strList('余力があればやること（今月やることに入らなかった候補。各40字以内）', 4),
       next_checks: strList('来月確かめること', 5),
     },
   },
@@ -182,6 +186,7 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
+      const context = String((req.body && req.body.context) || '').trim().slice(0, 500);
       const { start, end, prevStart, prevMonth } = monthRange(month);
       const rows = await fetchVoices(start, end);
       if (!rows.length) return res.status(400).json({ error: 'この月の記録がありません' });
@@ -210,10 +215,13 @@ export default async function handler(req, res) {
         maxTokens: 8000,
         system: SYSTEM,
         tool: REPORT_TOOL,
-        content: `対象月：${month}\n記録件数：${rows.length}件\n\n${lines.join('\n')}${prevText}`,
+        content:
+          `対象月：${month}\n記録件数：${rows.length}件\n` +
+          (context ? `\n【お店の事情】\n${context}\n` : '') +
+          `\n${lines.join('\n')}${prevText}`,
       });
 
-      const content = { stats, ai, categories: CATEGORIES, version: 2 };
+      const content = { stats, ai, context, categories: CATEGORIES, version: 2 };
       const r = await supabase('reports', {
         method: 'POST',
         headers: { Prefer: 'return=representation' },

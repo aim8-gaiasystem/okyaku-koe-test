@@ -92,6 +92,8 @@
     <div class="card">
       <label class="ttl" for="month">対象の月</label>
       <input id="month" type="month">
+      <label class="ttl" for="context">お店の事情（任意）</label>
+      <textarea id="context" style="min-height:80px" placeholder="例：夕方は人手が足りない。今月は設備にお金をかけられない。駐車場の工事は来年予定"></textarea>
       <button id="make" type="button">この月のレポートを作る</button>
       <div class="msg" id="rmsg"></div>
     </div>
@@ -240,10 +242,12 @@
   function renderV2(row, s, ai) {
     $('report').innerHTML = `
       <div class="meta">作成：${new Date(row.created_at).toLocaleString('ja-JP')}</div>
+      ${row.content.context ? `<div class="meta">踏まえたお店の事情：${esc(row.content.context)}</div>` : ''}
       <h2>今月の要点</h2>${list(ai.highlights)}
       <h2>今月やること（優先順）</h2>
       <p class="meta">効果・手軽さ・費用・始めやすさから優先順を決めています。決めたら「やる／見送り／実施済み」を押してください。翌月のレポートで振り返ります。</p>
       ${renderActions(row.actions, 'action')}
+      ${(ai.later || []).length ? `<h2>余力があればやること</h2>${list(ai.later)}` : ''}
       <h2>新商品・新サービスの案（優先順）</h2>
       ${renderActions(row.actions, 'service')}
       ${(ai.review || []).length ? `<h2>先月の提案の振り返り</h2>${ai.review.map(r => `<div class="rv"><b>${esc(r.title)}</b>（${esc(r.status)}）<br>${esc(r.comment)}</div>`).join('')}` : ''}
@@ -276,7 +280,9 @@
     $('rmsg').textContent = '';
     if (!$('month').value) { $('rmsg').textContent = '月を選んでください'; return; }
     $('make').disabled = true; $('make').textContent = 'AIが分析中…（30秒ほど）';
-    try { render(await api('/api/report', 'POST', { month: $('month').value })); }
+    const context = $('context').value.trim();
+    try { localStorage.setItem('context', context); } catch (e) {}
+    try { render(await api('/api/report', 'POST', { month: $('month').value, context })); }
     catch (e) { $('rmsg').textContent = e.message; }
     $('make').disabled = false; $('make').textContent = 'この月のレポートを作る';
   });
@@ -299,6 +305,7 @@
     load();
   });
 
+  try { $('context').value = localStorage.getItem('context') || ''; } catch (e) {}
   const now = new Date();
   $('month').value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   load();
