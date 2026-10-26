@@ -5,24 +5,46 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>お客様の声メモ</title>
 <style>
-  :root { --ink:#1f2328; --sub:#59636e; --line:#d0d7de; --bg:#f6f8fa; --accent:#1f6feb; }
+  :root { --ink:#1f2328; --sub:#59636e; --line:#d0d7de; --bg:#f6f8fa; --accent:#1f6feb; --soft:#ddf4ff; --warn:#fff8c5; }
   * { box-sizing: border-box; }
   body { margin:0; font-family: -apple-system, "Hiragino Sans", "Yu Gothic", sans-serif; color:var(--ink); background:var(--bg); font-size:17px; line-height:1.6; }
-  main { max-width:640px; margin:0 auto; padding:16px; }
-  h1 { font-size:22px; margin:8px 0 16px; }
+  main { max-width:680px; margin:0 auto; padding:16px; }
+  h1 { font-size:22px; margin:8px 0 12px; }
+  h2 { font-size:18px; margin:20px 0 8px; }
+  .tabs { display:flex; gap:8px; margin-bottom:16px; }
+  .tabs button { flex:1; margin:0; padding:12px; font-size:16px; background:#fff; color:var(--ink); border:1px solid var(--line); }
+  .tabs button.on { background:var(--accent); color:#fff; border-color:var(--accent); }
   .card { background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:16px; }
-  textarea, input { width:100%; font-size:17px; padding:12px; border:1px solid var(--line); border-radius:8px; font-family:inherit; }
-  textarea { min-height:120px; resize:vertical; }
+  label.ttl { display:block; font-weight:bold; margin:12px 0 6px; }
+  label.ttl:first-child { margin-top:0; }
+  textarea, input, select { width:100%; font-size:17px; padding:12px; border:1px solid var(--line); border-radius:8px; font-family:inherit; background:#fff; }
+  textarea { min-height:110px; resize:vertical; }
   button { width:100%; margin-top:12px; padding:14px; font-size:18px; font-weight:bold; color:#fff; background:var(--accent); border:none; border-radius:8px; }
   button:disabled { opacity:.6; }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; }
+  .chips button { width:auto; margin:0; padding:8px 14px; font-size:15px; font-weight:normal; background:#fff; color:var(--ink); border:1px solid var(--line); border-radius:999px; }
+  .chips button.on { background:var(--soft); color:#0550ae; border-color:#54aeff; font-weight:bold; }
   .msg { margin-top:8px; font-size:15px; color:#cf222e; min-height:1em; }
   .item { border-top:1px solid var(--line); padding:12px 0; }
   .item:first-child { border-top:none; }
-  .tag { display:inline-block; font-size:13px; padding:2px 10px; border-radius:999px; background:#ddf4ff; color:#0550ae; margin-right:8px; }
+  .tag { display:inline-block; font-size:13px; padding:2px 10px; border-radius:999px; background:var(--soft); color:#0550ae; margin:0 6px 4px 0; }
+  .tag.gray { background:#eaeef2; color:var(--sub); }
+  .tag.decl { background:#ffebe9; color:#a40e26; }
   .summary { font-weight:bold; }
   .meta { font-size:13px; color:var(--sub); margin-top:4px; }
   .raw { font-size:14px; color:var(--sub); margin-top:4px; white-space:pre-wrap; }
-  #passbox { display:none; }
+  .stat { display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:8px; }
+  .stat div { background:var(--bg); border-radius:8px; padding:10px; }
+  .stat b { display:block; font-size:22px; }
+  .bar { display:flex; align-items:center; gap:8px; font-size:15px; margin:4px 0; }
+  .bar span:first-child { width:80px; flex:none; }
+  .bar i { display:block; height:12px; background:var(--accent); border-radius:6px; }
+  .bar b, .bar em { white-space:nowrap; }
+  .bar em { font-style:normal; color:var(--sub); font-size:13px; }
+  .theme { border-left:4px solid var(--accent); padding:4px 0 4px 12px; margin:12px 0; }
+  .theme .q { font-size:14px; color:var(--sub); margin:2px 0; }
+  ul { margin:4px 0; padding-left:20px; }
+  #passbox, #page-report { display:none; }
 </style>
 </head>
 <body>
@@ -30,31 +52,65 @@
   <h1>お客様の声メモ</h1>
 
   <div class="card" id="passbox">
-    <label for="pass">合言葉</label>
+    <label class="ttl" for="pass">合言葉</label>
     <input id="pass" type="password" autocomplete="off">
     <button id="passbtn" type="button">開く</button>
   </div>
 
-  <div class="card">
-    <label for="content">お客様の声・困りごと</label>
-    <textarea id="content" placeholder="例：お惣菜の量が多すぎて一人暮らしには買いにくい、と言われた"></textarea>
-    <button id="send" type="button">記録する</button>
-    <div class="msg" id="msg"></div>
+  <div class="tabs">
+    <button type="button" id="tab-record" class="on">記録する</button>
+    <button type="button" id="tab-report">月次レポート</button>
   </div>
 
-  <div class="card">
-    <div id="list">読み込み中…</div>
-  </div>
+  <section id="page-record">
+    <div class="card">
+      <label class="ttl" for="content">お客様の声・困りごと</label>
+      <textarea id="content" placeholder="例：お惣菜の量が多すぎて一人暮らしには買いにくい、と言われた"></textarea>
+      <label class="ttl">売場</label>
+      <div class="chips" id="sections"></div>
+      <label class="ttl">対応結果</label>
+      <div class="chips" id="outcomes"></div>
+      <button id="send" type="button">記録する</button>
+      <div class="msg" id="msg"></div>
+    </div>
+    <div class="card"><div id="list">読み込み中…</div></div>
+  </section>
+
+  <section id="page-report">
+    <div class="card">
+      <label class="ttl" for="month">対象の月</label>
+      <input id="month" type="month">
+      <button id="make" type="button">この月のレポートを作る</button>
+      <div class="msg" id="rmsg"></div>
+    </div>
+    <div class="card" id="report">月を選ぶと、作成済みのレポートが表示されます</div>
+  </section>
 </main>
 <script>
+  const SECTIONS = ['惣菜','青果','鮮魚','精肉','日配','加工食品','日用品','レジ','駐車場','その他'];
+  const OUTCOMES = ['対応できた','お断りした','その他'];
   const $ = (id) => document.getElementById(id);
   let passcode = '';
   try { passcode = localStorage.getItem('passcode') || ''; } catch (e) {}
+  let section = '', outcome = '';
 
   function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
-  async function api(method, body) {
-    const res = await fetch('/api/voices', {
+  function chips(el, list, onPick) {
+    el.innerHTML = list.map(v => `<button type="button" data-v="${esc(v)}">${esc(v)}</button>`).join('');
+    el.addEventListener('click', e => {
+      const b = e.target.closest('button'); if (!b) return;
+      const on = !b.classList.contains('on');
+      el.querySelectorAll('button').forEach(x => x.classList.remove('on'));
+      if (on) b.classList.add('on');
+      onPick(on ? b.dataset.v : '');
+    });
+  }
+  chips($('sections'), SECTIONS, v => section = v);
+  chips($('outcomes'), OUTCOMES, v => outcome = v);
+
+  async function api(path, method, body) {
+    const res = await fetch(path, {
       method,
       headers: { 'Content-Type': 'application/json', 'x-passcode': passcode },
       body: body ? JSON.stringify(body) : undefined,
@@ -67,11 +123,12 @@
 
   async function load() {
     try {
-      const rows = await api('GET');
+      const rows = await api('/api/voices', 'GET');
       $('passbox').style.display = 'none';
       $('list').innerHTML = rows.length ? rows.map(r => `
         <div class="item">
-          <span class="tag">${esc(r.category || '未分類')}</span><span class="summary">${esc(r.summary || '')}</span>
+          <span class="tag">${esc(r.category || '未分類')}</span>${r.section ? `<span class="tag gray">${esc(r.section)}</span>` : ''}${r.outcome ? `<span class="tag ${r.outcome === 'お断りした' ? 'decl' : 'gray'}">${esc(r.outcome)}</span>` : ''}
+          <div class="summary">${esc(r.summary || '')}</div>
           <div class="raw">${esc(r.content)}</div>
           <div class="meta">${new Date(r.created_at).toLocaleString('ja-JP')}</div>
         </div>`).join('') : 'まだ記録はありません';
@@ -84,14 +141,79 @@
     if (!content) { $('msg').textContent = '内容を入力してください'; return; }
     $('send').disabled = true; $('send').textContent = 'AIが分類中…';
     try {
-      await api('POST', { content });
+      await api('/api/voices', 'POST', { content, section, outcome });
       $('content').value = '';
       await load();
     } catch (e) { $('msg').textContent = e.message; }
     $('send').disabled = false; $('send').textContent = '記録する';
   });
-
   $('content').addEventListener('input', () => { $('msg').textContent = ''; });
+
+  function bars(obj, prev) {
+    const entries = Object.entries(obj).sort((a, b) => b[1] - a[1]);
+    const max = Math.max(1, ...entries.map(e => e[1]));
+    return entries.map(([k, v]) => {
+      const p = prev ? (prev[k] || 0) : null;
+      const diff = p === null ? '' : `<em>（前月 ${p}件）</em>`;
+      return `<div class="bar"><span>${esc(k)}</span><i style="width:${Math.round(v / max * 60)}%"></i><b>${v}件</b>${diff}</div>`;
+    }).join('');
+  }
+  const list = (arr) => (arr && arr.length) ? `<ul>${arr.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : '<p class="meta">なし</p>';
+
+  function render(row) {
+    if (!row) { $('report').innerHTML = 'この月のレポートはまだありません。上のボタンで作れます'; return; }
+    const { stats: s, ai } = row.content;
+    $('report').innerHTML = `
+      <div class="meta">作成：${new Date(row.created_at).toLocaleString('ja-JP')}</div>
+      <h2>今月の要点</h2>${list(ai.highlights)}
+      <h2>件数</h2>
+      <div class="stat">
+        <div>記録の件数<b>${s.total}件</b><span class="meta">前月 ${s.prevTotal}件</span></div>
+        <div>お断りした件数<b>${s.byOutcome['お断りした'] || 0}件</b></div>
+      </div>
+      <h2>分類ごと</h2>${bars(s.byCategory, s.prevByCategory)}
+      <h2>売場ごと</h2>${bars(s.bySection)}
+      <h2>注目テーマ</h2>
+      ${(ai.themes || []).map(t => `
+        <div class="theme">
+          <div class="summary">${esc(t.title)}（${esc(t.count)}件）</div>
+          ${(t.examples || []).map(q => `<div class="q">「${esc(q)}」</div>`).join('')}
+          <div><b>見立て：</b>${esc(t.cause)}</div>
+          <div><b>打ち手：</b>${esc(t.action)}</div>
+        </div>`).join('') || '<p class="meta">なし</p>'}
+      <h2>お断りした要望（新商品・サービスの種）</h2>
+      ${(ai.declined || []).length ? `<ul>${ai.declined.map(d => `<li><b>${esc(d.request)}</b>（${esc(d.count)}件）<br>→ ${esc(d.idea)}</li>`).join('')}</ul>` : '<p class="meta">なし</p>'}
+      <h2>すぐできる改善</h2>${list(ai.quick_wins)}
+      <h2>検討したい新商品・サービス</h2>${list(ai.new_ideas)}
+      <h2>来月確かめること</h2>${list(ai.next_checks)}`;
+  }
+
+  async function loadReport() {
+    $('rmsg').textContent = '';
+    try { render(await api(`/api/report?month=${$('month').value}`, 'GET')); }
+    catch (e) { $('report').textContent = e.message; }
+  }
+
+  $('make').addEventListener('click', async () => {
+    $('rmsg').textContent = '';
+    if (!$('month').value) { $('rmsg').textContent = '月を選んでください'; return; }
+    $('make').disabled = true; $('make').textContent = 'AIが分析中…（30秒ほど）';
+    try { render(await api('/api/report', 'POST', { month: $('month').value })); }
+    catch (e) { $('rmsg').textContent = e.message; }
+    $('make').disabled = false; $('make').textContent = 'この月のレポートを作る';
+  });
+  $('month').addEventListener('change', loadReport);
+
+  function show(tab) {
+    const rec = tab === 'record';
+    $('page-record').style.display = rec ? 'block' : 'none';
+    $('page-report').style.display = rec ? 'none' : 'block';
+    $('tab-record').classList.toggle('on', rec);
+    $('tab-report').classList.toggle('on', !rec);
+    if (!rec) loadReport();
+  }
+  $('tab-record').addEventListener('click', () => show('record'));
+  $('tab-report').addEventListener('click', () => show('report'));
 
   $('passbtn').addEventListener('click', () => {
     passcode = $('pass').value;
@@ -99,6 +221,8 @@
     load();
   });
 
+  const now = new Date();
+  $('month').value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   load();
 </script>
 </body>
