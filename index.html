@@ -44,6 +44,18 @@
   .theme { border-left:4px solid var(--accent); padding:4px 0 4px 12px; margin:12px 0; }
   .theme .q { font-size:14px; color:var(--sub); margin:2px 0; }
   ul { margin:4px 0; padding-left:20px; }
+  .act { border:1px solid var(--line); border-radius:10px; padding:12px; margin:10px 0; }
+  .act .head { display:flex; gap:10px; align-items:baseline; }
+  .act .rank { flex:none; width:28px; height:28px; border-radius:50%; background:var(--accent); color:#fff; font-weight:bold; display:flex; align-items:center; justify-content:center; font-size:15px; }
+  .act .name { font-weight:bold; font-size:17px; }
+  .act .scores { display:flex; flex-wrap:wrap; gap:6px; margin:8px 0; }
+  .act .scores span { font-size:13px; background:var(--bg); border-radius:6px; padding:2px 8px; }
+  .act .row { font-size:15px; margin:2px 0; }
+  .act .row b { color:var(--sub); font-weight:normal; }
+  .status { display:flex; gap:6px; margin-top:10px; }
+  .status button { flex:1; margin:0; padding:8px 4px; font-size:14px; font-weight:normal; background:#fff; color:var(--ink); border:1px solid var(--line); }
+  .status button.on { background:var(--soft); color:#0550ae; border-color:#54aeff; font-weight:bold; }
+  .rv { border-left:4px solid #8c959f; padding:4px 0 4px 12px; margin:8px 0; font-size:15px; }
   #passbox, #page-report { display:none; }
 </style>
 </head>
@@ -160,9 +172,46 @@
   }
   const list = (arr) => (arr && arr.length) ? `<ul>${arr.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : '<p class="meta">なし</p>';
 
+  const STATUSES = ['やる', '見送り', '実施済み'];
+  const stars = (n) => '★'.repeat(Number(n) || 0) + '☆'.repeat(5 - (Number(n) || 0));
+
+  function actCard(a, i, isService) {
+    const d = a.data || {};
+    return `
+      <div class="act" data-id="${a.id}">
+        <div class="head"><span class="rank">${i + 1}</span><span class="name">${esc(a.title)}</span></div>
+        <div class="scores">
+          <span>効果 ${stars(d.impact)}</span><span>手軽さ ${stars(d.ease)}</span>
+          <span>費用 ${esc(d.cost)}</span><span>開始 ${esc(d.start)}</span>
+        </div>
+        <div class="row"><b>理由：</b>${esc(d.reason)}</div>
+        ${isService
+          ? `<div class="row"><b>まず試す：</b>${esc(d.trial)}</div>`
+          : `<div class="row"><b>担当：</b>${esc(d.owner)}　<b>期限：</b>${esc(d.due)}</div>`}
+        <div class="row"><b>確かめ方：</b>${esc(d.measure)}</div>
+        <div class="status">${STATUSES.map(s => `<button type="button" data-s="${s}" class="${a.status === s ? 'on' : ''}">${s}</button>`).join('')}</div>
+      </div>`;
+  }
+
+  function renderActions(actions, kind) {
+    const list = (actions || []).filter(a => a.kind === kind).sort((a, b) => (b.data?.score || 0) - (a.data?.score || 0));
+    return list.length ? list.map((a, i) => actCard(a, i, kind === 'service')).join('') : '<p class="meta">なし</p>';
+  }
+
+  $('report').addEventListener('click', async (e) => {
+    const b = e.target.closest('.status button'); if (!b) return;
+    const card = b.closest('.act');
+    const next = b.classList.contains('on') ? '未決定' : b.dataset.s;
+    try {
+      await api('/api/actions', 'PATCH', { id: Number(card.dataset.id), status: next });
+      card.querySelectorAll('.status button').forEach(x => x.classList.toggle('on', x.dataset.s === next));
+    } catch (err) { $('rmsg').textContent = err.message; }
+  });
+
   function render(row) {
     if (!row) { $('report').innerHTML = 'この月のレポートはまだありません。上のボタンで作れます'; return; }
     const { stats: s, ai } = row.content;
+    if (row.content.version === 2) { renderV2(row, s, ai); return; }
     $('report').innerHTML = `
       <div class="meta">作成：${new Date(row.created_at).toLocaleString('ja-JP')}</div>
       <h2>今月の要点</h2>${list(ai.highlights)}
@@ -185,6 +234,35 @@
       ${(ai.declined || []).length ? `<ul>${ai.declined.map(d => `<li><b>${esc(d.request)}</b>（${esc(d.count)}件）<br>→ ${esc(d.idea)}</li>`).join('')}</ul>` : '<p class="meta">なし</p>'}
       <h2>すぐできる改善</h2>${list(ai.quick_wins)}
       <h2>検討したい新商品・サービス</h2>${list(ai.new_ideas)}
+      <h2>来月確かめること</h2>${list(ai.next_checks)}`;
+  }
+
+  function renderV2(row, s, ai) {
+    $('report').innerHTML = `
+      <div class="meta">作成：${new Date(row.created_at).toLocaleString('ja-JP')}</div>
+      <h2>今月の要点</h2>${list(ai.highlights)}
+      <h2>今月やること（優先順）</h2>
+      <p class="meta">効果・手軽さ・費用・始めやすさから優先順を決めています。決めたら「やる／見送り／実施済み」を押してください。翌月のレポートで振り返ります。</p>
+      ${renderActions(row.actions, 'action')}
+      <h2>新商品・新サービスの案（優先順）</h2>
+      ${renderActions(row.actions, 'service')}
+      ${(ai.review || []).length ? `<h2>先月の提案の振り返り</h2>${ai.review.map(r => `<div class="rv"><b>${esc(r.title)}</b>（${esc(r.status)}）<br>${esc(r.comment)}</div>`).join('')}` : ''}
+      <h2>件数</h2>
+      <div class="stat">
+        <div>記録の件数<b>${s.total}件</b><span class="meta">前月 ${s.prevTotal}件</span></div>
+        <div>お断りした件数<b>${s.byOutcome['お断りした'] || 0}件</b></div>
+      </div>
+      <h2>分類ごと</h2>${bars(s.byCategory, s.prevByCategory)}
+      <h2>売場ごと</h2>${bars(s.bySection)}
+      <h2>注目テーマ</h2>
+      ${(ai.themes || []).map(t => `
+        <div class="theme">
+          <div class="summary">${esc(t.title)}（${esc(t.count)}件）</div>
+          ${(t.examples || []).map(q => `<div class="q">「${esc(q)}」</div>`).join('')}
+          <div><b>見立て：</b>${esc(t.cause)}</div>
+        </div>`).join('') || '<p class="meta">なし</p>'}
+      <h2>お断りした要望</h2>
+      ${(ai.declined || []).length ? `<ul>${ai.declined.map(d => `<li>${esc(d.request)}（${esc(d.count)}件）</li>`).join('')}</ul>` : '<p class="meta">なし</p>'}
       <h2>来月確かめること</h2>${list(ai.next_checks)}`;
   }
 
