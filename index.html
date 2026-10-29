@@ -3,128 +3,216 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1f8a4c">
 <title>お客様の声メモ</title>
+<link rel="stylesheet" href="/common.css">
 <style>
-  :root { --ink:#1f2328; --sub:#59636e; --line:#d0d7de; --bg:#f6f8fa; --accent:#1f6feb; --soft:#ddf4ff; }
-  * { box-sizing: border-box; }
-  body { margin:0; font-family: -apple-system, "Hiragino Sans", "Yu Gothic", sans-serif; color:var(--ink); background:var(--bg); font-size:17px; line-height:1.6; }
-  main { max-width:560px; margin:0 auto; padding:16px; }
-  h1 { font-size:22px; margin:8px 0 12px; }
-  .card { background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:16px; }
-  label.ttl { display:block; font-weight:bold; margin:12px 0 6px; }
-  label.ttl:first-child { margin-top:0; }
-  textarea, input { width:100%; font-size:17px; padding:12px; border:1px solid var(--line); border-radius:8px; font-family:inherit; background:#fff; }
-  textarea { min-height:130px; resize:vertical; }
-  button { width:100%; margin-top:12px; padding:14px; font-size:18px; font-weight:bold; color:#fff; background:var(--accent); border:none; border-radius:8px; }
-  button:disabled { opacity:.6; }
-  .chips { display:flex; flex-wrap:wrap; gap:8px; }
-  .chips button { width:auto; margin:0; padding:8px 14px; font-size:15px; font-weight:normal; background:#fff; color:var(--ink); border:1px solid var(--line); border-radius:999px; }
-  .chips button.on { background:var(--soft); color:#0550ae; border-color:#54aeff; font-weight:bold; }
-  .msg { margin-top:8px; font-size:15px; color:#cf222e; min-height:1em; }
-  .thanks { display:none; background:#dafbe1; color:#116329; border-radius:8px; padding:12px; margin-top:12px; font-weight:bold; }
-  .count { text-align:center; color:var(--sub); }
-  .count b { display:block; font-size:30px; color:var(--ink); }
-  .note { font-size:13px; color:var(--sub); margin:6px 0 0; }
-  #passbox { display:none; }
+  .kinds { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .kind {
+    display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: left;
+    padding: 12px; border-radius: 14px; border: 2px solid var(--line); background: #fff; color: var(--ink);
+    font-size: 16px; font-weight: 700; line-height: 1.35;
+  }
+  .kind small { font-weight: 400; font-size: 12px; color: var(--sub); }
+  .kind .ic { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+  .kind .ic svg { width: 20px; height: 20px; }
+  .kind[data-v="お客様の声"] .ic { background: var(--green-soft); color: var(--green); }
+  .kind[data-v="困りごと"] .ic { background: var(--orange-soft); color: var(--orange-dark); }
+  .kind[data-v="アイデア"] .ic { background: var(--yellow-soft); color: #a87700; }
+  .kind[data-v="ありません"] .ic { background: var(--red-soft); color: var(--red); }
+  .kind.on[data-v="お客様の声"] { border-color: var(--green); background: var(--green-soft); }
+  .kind.on[data-v="困りごと"] { border-color: var(--orange); background: var(--orange-soft); }
+  .kind.on[data-v="アイデア"] { border-color: var(--yellow); background: var(--yellow-soft); }
+  .kind.on[data-v="ありません"] { border-color: var(--red); background: var(--red-soft); }
+  .micbtn {
+    display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; padding: 9px 14px;
+    border: 2px solid var(--green); background: #fff; color: var(--green-dark); border-radius: 999px;
+    font-size: 15px; font-weight: 700;
+  }
+  .micbtn svg { width: 18px; height: 18px; }
+  .micbtn.rec { background: var(--red); border-color: var(--red); color: #fff; }
+  .micbtn .dot { width: 10px; height: 10px; border-radius: 50%; background: #fff; animation: blink 1s infinite; }
+  @keyframes blink { 50% { opacity: .2; } }
+  .photo-pick {
+    display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 14px;
+    border: 2px dashed var(--line); border-radius: 12px; background: #fff; color: var(--sub); font-size: 15px; font-weight: 700;
+  }
+  .photo-pick svg { width: 22px; height: 22px; }
+  .preview { display: none; position: relative; margin-top: 4px; }
+  .preview img { width: 100%; max-height: 260px; object-fit: cover; border-radius: 12px; display: block; }
+  .preview button {
+    position: absolute; top: 8px; right: 8px; padding: 6px 12px; border: none; border-radius: 999px;
+    background: rgba(0,0,0,.6); color: #fff; font-size: 14px;
+  }
+  #passbox, #item-wrap, #outcome-wrap { display: none; }
 </style>
 </head>
 <body>
-<main>
-  <h1>お客様の声メモ</h1>
+<header class="bar-top">
+  <div class="in">
+    <div class="logo">声</div>
+    <div><h1>お客様の声メモ</h1><div class="small">気づいたことを、30秒で</div></div>
+    <div class="count-pill">今月<b id="count">―</b></div>
+  </div>
+</header>
 
+<main>
   <div class="card" id="passbox">
-    <label class="ttl" for="pass">合言葉</label>
+    <label class="ttl" for="pass" style="margin-top:0">合言葉</label>
     <input id="pass" type="password" autocomplete="off">
-    <button id="passbtn" type="button">開く</button>
+    <button class="btn green" id="passbtn" type="button">開く</button>
+    <div class="msg" id="passmsg"></div>
   </div>
 
   <div class="card">
-    <label class="ttl" for="content">お客様の声・困りごと</label>
-    <textarea id="content" placeholder="例：お惣菜の量が多すぎて一人暮らしには買いにくい、と言われた"></textarea>
-    <p class="note">お客様のお名前や電話番号は書かないでください</p>
-    <label class="ttl">売場</label>
-    <div class="chips" id="sections"></div>
-    <label class="ttl">対応結果</label>
-    <div class="chips" id="outcomes"></div>
-    <button id="send" type="button">記録する</button>
-    <div class="msg" id="msg"></div>
-    <div class="thanks" id="thanks">記録しました。ありがとうございます</div>
+    <p class="step"><span class="no">1</span>どんな声ですか？</p>
+    <div class="kinds" id="kinds">
+      <button type="button" class="kind on" data-v="お客様の声">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></span>
+        お客様の声<small>言われた要望・苦情・ほめ言葉</small>
+      </button>
+      <button type="button" class="kind" data-v="ありません">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M6 6l12 12"/></svg></span>
+        「ありません」<small>置いてない・できないと答えた</small>
+      </button>
+      <button type="button" class="kind" data-v="困りごと">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9.5 17h-19z"/><path d="M12 10v4M12 17.5v.5"/></svg></span>
+        自分が困った<small>作業・設備・人手</small>
+      </button>
+      <button type="button" class="kind" data-v="アイデア">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg></span>
+        アイデア<small>こうしたら良くなる</small>
+      </button>
+    </div>
   </div>
 
-  <div class="card count">
-    今月集まった声
-    <b id="count">―</b>
-    <span class="note">みなさんの声は、毎月まとめて改善に活かします</span>
+  <div class="card">
+    <p class="step"><span class="no">2</span><span id="step2">内容を書く・話す</span></p>
+
+    <div id="item-wrap">
+      <input type="text" id="item" placeholder="例：グルテンフリーのパン、魚の三枚おろし" maxlength="100">
+      <button type="button" class="micbtn" id="mic-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>話して入力
+      </button>
+      <label class="ttl" for="content">くわしく <span class="note">（任意）</span></label>
+    </div>
+
+    <textarea id="content" placeholder="例：お惣菜の量が多すぎて、一人暮らしには買いにくいと言われた"></textarea>
+    <button type="button" class="micbtn" id="mic">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>話して入力
+    </button>
+    <p class="note" id="michint"></p>
+    <p class="note">お客様のお名前や電話番号は書かないでください</p>
   </div>
+
+  <div class="card">
+    <p class="step"><span class="no">3</span>売場 <span class="opt">（任意）</span></p>
+    <div class="chips" id="sections"></div>
+
+    <div id="outcome-wrap">
+      <label class="ttl">対応できましたか？ <span class="note">（任意）</span></label>
+      <div class="chips" id="outcomes"></div>
+    </div>
+
+    <label class="ttl">写真 <span class="note">（任意。商品や売場の様子など。人の顔は写さない）</span></label>
+    <input type="file" id="photo" accept="image/*" hidden>
+    <button type="button" class="photo-pick" id="photo-pick">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>写真をつける
+    </button>
+    <div class="preview" id="preview"><img id="preview-img" alt="添付する写真"><button type="button" id="photo-remove">外す</button></div>
+
+    <button class="btn" id="send" type="button">記録する</button>
+    <div class="msg" id="msg"></div>
+    <div class="thanks" id="thanks">記録しました。ありがとうございます<span class="ai" id="ai"></span></div>
+  </div>
+
+  <p class="note" style="text-align:center">集まった声は、毎月まとめて売場とサービスの改善に活かします</p>
 </main>
+
+<script src="/common.js"></script>
 <script>
+  const { $, chips, mic, shrinkPhoto, api, store } = Koe;
   const SECTIONS = ['惣菜','青果','鮮魚','精肉','日配','加工食品','日用品','レジ','駐車場','その他'];
   const OUTCOMES = ['対応できた','お断りした','その他'];
-  const $ = (id) => document.getElementById(id);
-  let passcode = '';
-  try { passcode = localStorage.getItem('passcode') || ''; } catch (e) {}
-  let section = '', outcome = '';
+  const PLACEHOLDER = {
+    'お客様の声': '例：お惣菜の量が多すぎて、一人暮らしには買いにくいと言われた',
+    '困りごと': '例：夕方のレジに人が足りず、品出しが閉店まで終わらない',
+    'アイデア': '例：値引きシールの商品を1か所にまとめたら、探す人が減りそう',
+    'ありません': '例：週に何度か聞かれる。米粉のパンもあれば、と言われた',
+  };
+  let passcode = store.get('passcode');
+  let kind = 'お客様の声', section = '', outcome = '', photo = '';
 
-  function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  const sectionChips = chips($('sections'), SECTIONS, (v) => section = v);
+  const outcomeChips = chips($('outcomes'), OUTCOMES, (v) => outcome = v);
+  mic($('mic'), $('content'), $('michint'));
+  mic($('mic-item'), $('item'), $('michint'));
 
-  function chips(el, list, onPick) {
-    el.innerHTML = list.map(v => `<button type="button" data-v="${esc(v)}">${esc(v)}</button>`).join('');
-    el.addEventListener('click', e => {
-      const b = e.target.closest('button'); if (!b) return;
-      const on = !b.classList.contains('on');
-      el.querySelectorAll('button').forEach(x => x.classList.remove('on'));
-      if (on) b.classList.add('on');
-      onPick(on ? b.dataset.v : '');
-    });
+  function setKind(v) {
+    kind = v;
+    document.querySelectorAll('.kind').forEach((b) => b.classList.toggle('on', b.dataset.v === v));
+    const isNo = v === 'ありません';
+    $('item-wrap').style.display = isNo ? 'block' : 'none';
+    $('outcome-wrap').style.display = v === 'お客様の声' ? 'block' : 'none';
+    $('step2').textContent = isNo ? '何を聞かれましたか？' : '内容を書く・話す';
+    $('content').placeholder = PLACEHOLDER[v];
+    $('content').style.minHeight = isNo ? '70px' : '';
+    $('msg').textContent = '';
   }
-  chips($('sections'), SECTIONS, v => section = v);
-  chips($('outcomes'), OUTCOMES, v => outcome = v);
+  $('kinds').addEventListener('click', (e) => { const b = e.target.closest('.kind'); if (b) setKind(b.dataset.v); });
+  setKind(kind);
 
-  async function api(path, method, body) {
-    const res = await fetch(path, {
-      method,
-      headers: { 'Content-Type': 'application/json', 'x-passcode': passcode },
-      body: body ? JSON.stringify(body) : undefined,
-    });
-    const data = await res.json().catch(() => ({}));
-    if (res.status === 401) { $('passbox').style.display = 'block'; throw new Error('合言葉を入力してください'); }
-    if (!res.ok) throw new Error(data.error || 'エラーが発生しました');
-    return data;
+  // 写真
+  $('photo-pick').addEventListener('click', () => $('photo').click());
+  $('photo').addEventListener('change', async () => {
+    const f = $('photo').files[0]; if (!f) return;
+    try {
+      photo = await shrinkPhoto(f);
+      $('preview-img').src = photo;
+      $('preview').style.display = 'block'; $('photo-pick').style.display = 'none';
+    } catch (e) { $('msg').textContent = e.message; }
+    $('photo').value = '';
+  });
+  function clearPhoto() { photo = ''; $('preview').style.display = 'none'; $('photo-pick').style.display = 'flex'; }
+  $('photo-remove').addEventListener('click', clearPhoto);
+
+  function needPass(e) {
+    if (e.status === 401) { $('passbox').style.display = 'block'; $('passmsg').textContent = passcode ? '合言葉が違います' : ''; return true; }
+    return false;
   }
 
   async function loadCount() {
     try {
-      const d = await api('/api/voices?count=month', 'GET');
+      const d = await api('/api/voices?count=month', 'GET', null, passcode);
       $('passbox').style.display = 'none';
       $('count').textContent = `${d.count}件`;
-    } catch (e) { $('msg').textContent = e.message; }
-  }
-
-  function resetChips() {
-    section = ''; outcome = '';
-    document.querySelectorAll('.chips button').forEach(x => x.classList.remove('on'));
+    } catch (e) { if (!needPass(e)) $('msg').textContent = e.message; }
   }
 
   $('send').addEventListener('click', async () => {
     const content = $('content').value.trim();
+    const item = $('item').value.trim();
     $('msg').textContent = ''; $('thanks').style.display = 'none';
-    if (!content) { $('msg').textContent = '内容を入力してください'; return; }
+    if (kind === 'ありません' && !item) { $('msg').textContent = '聞かれた商品・サービスを入力してください'; return; }
+    if (kind !== 'ありません' && !content) { $('msg').textContent = '内容を入力してください'; return; }
     $('send').disabled = true; $('send').textContent = '記録しています…';
     try {
-      await api('/api/voices', 'POST', { content, section, outcome });
-      $('content').value = ''; resetChips();
+      const r = await api('/api/voices', 'POST', {
+        kind, content, item: kind === 'ありません' ? item : '', section,
+        outcome: kind === 'お客様の声' ? outcome : '', photo: photo || undefined,
+      }, passcode);
+      $('content').value = ''; $('item').value = '';
+      section = ''; outcome = ''; sectionChips.clear(); outcomeChips.clear(); clearPhoto();
+      $('ai').textContent = `分類：${r.category}　／　${r.summary}`;
       $('thanks').style.display = 'block';
-      await loadCount();
-    } catch (e) { $('msg').textContent = e.message; }
+      loadCount();
+    } catch (e) { if (!needPass(e)) $('msg').textContent = e.message; }
     $('send').disabled = false; $('send').textContent = '記録する';
   });
-  $('content').addEventListener('input', () => { $('msg').textContent = ''; $('thanks').style.display = 'none'; });
+  ['content', 'item'].forEach((id) => $(id).addEventListener('input', () => { $('msg').textContent = ''; $('thanks').style.display = 'none'; }));
 
   $('passbtn').addEventListener('click', () => {
-    passcode = $('pass').value;
-    try { localStorage.setItem('passcode', passcode); } catch (e) {}
-    $('msg').textContent = '';
-    loadCount();
+    passcode = $('pass').value; store.set('passcode', passcode); loadCount();
   });
 
   loadCount();

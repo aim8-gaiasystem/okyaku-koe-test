@@ -58,7 +58,10 @@ const SYSTEM =
   'あなたはスーパーマーケットの店長を支える分析担当です。店員が1か月間に記録したお客様の声と現場の困りごとを読み、' +
   '店長が「次に何を、どの順でやるか」を決められるレポートを作ります。\n' +
   '・似た内容の声を束ねて「テーマ」にし、件数の多い順・影響の大きい順に最大5つ挙げる\n' +
-  '・「お断りした」声は、新商品・新サービスの種として別にまとめる\n' +
+  '・記録には、店員が聞いた「お客様の声」、店員自身の「困りごと」「アイデア」、置いていない商品やできないサービスを聞かれた「ありません」、' +
+  'お客様がアプリやQRから直接送った「欲しい商品」「ご意見・ご要望」（満足度つきの場合あり）が混ざっている\n' +
+  '・「お断りした」声と「ありません」「欲しい商品」は、新商品・新サービスの種として別にまとめる。同じ商品名は束ねて数える\n' +
+  '・店員の「困りごと」は働きやすさの課題として扱い、お客様への影響とあわせて見る\n' +
   '・お店の事情（人手・予算・設備など）が与えられた場合は必ず踏まえる。事情に照らして実行が難しい行動は選ばないか、' +
   '事情の範囲でできる工夫に置き換える\n' +
   '・今月やることは、店長が実際に動ける数に絞って最大3つ。それ以外の候補は「余力があればやること」に短く書く\n' +
@@ -200,11 +203,26 @@ export default async function handler(req, res) {
         prevByCategory: countBy(prevRows, 'category'),
         bySection: countBy(rows, 'section'),
         byOutcome: countBy(rows, 'outcome'),
+        bySource: countBy(rows.map((r) => ({ s: r.source === 'customer' ? 'お客様から' : '店員から' })), 's'),
+        byKind: countBy(rows.map((r) => ({ k: r.kind || 'お客様の声' })), 'k'),
+        rating: (() => {
+          const xs = rows.map((r) => r.rating).filter((n) => n >= 1 && n <= 5);
+          return xs.length ? { count: xs.length, avg: Math.round((xs.reduce((a, b) => a + b, 0) / xs.length) * 10) / 10 } : null;
+        })(),
       };
 
-      const lines = rows.map((r, i) =>
-        `${i + 1}. [分類:${r.category || '未分類'}][売場:${r.section || '未記入'}][対応:${r.outcome || '未記入'}] ${r.content}`
-      );
+      const lines = rows.map((r, i) => {
+        const tags = [
+          r.source === 'customer' ? 'お客様から直接' : '店員の記録',
+          `種類:${r.kind || 'お客様の声'}`,
+          `分類:${r.category || '未分類'}`,
+          r.section && `売場:${r.section}`,
+          r.outcome && `対応:${r.outcome}`,
+          r.item && `商品:${r.item}`,
+          r.rating && `満足度:${r.rating}/5`,
+        ].filter(Boolean).map((t) => `[${t}]`).join('');
+        return `${i + 1}. ${tags} ${r.content}`;
+      });
       const prevText = prevActions.length
         ? `\n\n【先月（${prevMonth}）の提案と状況】\n` +
           prevActions.map((a) => `・${a.title}（${a.kind === 'service' ? '新サービス案' : '改善'}）：${a.status}`).join('\n')

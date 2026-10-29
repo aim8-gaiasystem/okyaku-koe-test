@@ -1,0 +1,97 @@
+/* お客様の声メモ：3つの画面で共通の見た目（スーパーらしい明るい色） */
+:root {
+  --ink: #1f2a24;
+  --sub: #5d6b63;
+  --line: #e2ddd2;
+  --bg: #fbf7ef;
+  --card: #ffffff;
+  --green: #1f8a4c;
+  --green-dark: #146a39;
+  --green-soft: #e5f4ea;
+  --orange: #f07c1b;
+  --orange-dark: #c95f08;
+  --orange-soft: #fff0e0;
+  --red: #d64532;
+  --red-soft: #fde9e5;
+  --yellow: #e8a400;
+  --yellow-soft: #fff6d6;
+  --blue: #2b6fb8;
+  --blue-soft: #e5effa;
+  --radius: 16px;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans JP", sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+  font-size: 17px;
+  line-height: 1.6;
+}
+.bar-top {
+  background: var(--green);
+  color: #fff;
+  padding: 14px 16px 18px;
+  border-radius: 0 0 22px 22px;
+}
+.bar-top .in { max-width: 600px; margin: 0 auto; display: flex; align-items: center; gap: 12px; }
+.logo {
+  flex: none; width: 42px; height: 42px; border-radius: 12px;
+  background: #fff; color: var(--green); font-weight: 800; font-size: 22px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: inset 0 -3px 0 var(--orange);
+}
+.bar-top h1 { margin: 0; font-size: 20px; line-height: 1.3; }
+.bar-top .small { font-size: 13px; opacity: .9; }
+.bar-top .count-pill {
+  margin-left: auto; flex: none; background: rgba(255,255,255,.18); border-radius: 999px;
+  padding: 4px 12px; font-size: 13px; text-align: center; line-height: 1.3;
+}
+.bar-top .count-pill b { display: block; font-size: 18px; }
+main { max-width: 600px; margin: 0 auto; padding: 16px 16px 40px; }
+.card {
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 18px 16px; margin-bottom: 14px; box-shadow: 0 1px 2px rgba(60, 50, 30, .04);
+}
+.step { display: flex; align-items: center; gap: 8px; font-weight: 700; margin: 0 0 10px; font-size: 17px; }
+.step .no {
+  flex: none; width: 24px; height: 24px; border-radius: 50%; background: var(--green); color: #fff;
+  font-size: 14px; display: flex; align-items: center; justify-content: center;
+}
+.step .opt { font-weight: 400; font-size: 13px; color: var(--sub); }
+label.ttl { display: block; font-weight: 700; margin: 16px 0 6px; }
+textarea, input[type=text], input[type=password], input[type=month], select {
+  width: 100%; font-size: 17px; padding: 12px 14px; border: 2px solid var(--line); border-radius: 12px;
+  font-family: inherit; background: #fff; color: var(--ink);
+}
+textarea:focus, input:focus, select:focus { outline: none; border-color: var(--green); }
+textarea { min-height: 120px; resize: vertical; }
+button { font-family: inherit; cursor: pointer; }
+.btn {
+  width: 100%; margin-top: 16px; padding: 16px; font-size: 18px; font-weight: 800; color: #fff;
+  background: var(--orange); border: none; border-radius: 14px; box-shadow: 0 3px 0 var(--orange-dark);
+}
+.btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--orange-dark); }
+.btn:disabled { opacity: .6; }
+.btn.green { background: var(--green); box-shadow: 0 3px 0 var(--green-dark); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chips button {
+  padding: 8px 14px; font-size: 15px; background: #fff; color: var(--ink);
+  border: 2px solid var(--line); border-radius: 999px;
+}
+.chips button.on { background: var(--green-soft); color: var(--green-dark); border-color: var(--green); font-weight: 700; }
+.msg { margin-top: 8px; font-size: 15px; color: var(--red); min-height: 1em; }
+.note { font-size: 13px; color: var(--sub); margin: 6px 0 0; }
+.thanks {
+  display: none; background: var(--green-soft); color: var(--green-dark); border-radius: 12px;
+  padding: 14px; margin-top: 12px; font-weight: 700;
+}
+.thanks .ai { display: block; font-weight: 400; font-size: 14px; color: var(--ink); margin-top: 4px; }
+.tag { display: inline-block; font-size: 12px; padding: 2px 10px; border-radius: 999px; margin: 0 6px 4px 0; background: var(--green-soft); color: var(--green-dark); font-weight: 700; }
+.tag.gray { background: #efebe3; color: var(--sub); font-weight: 400; }
+.tag.red { background: var(--red-soft); color: var(--red); }
+.tag.orange { background: var(--orange-soft); color: var(--orange-dark); }
+.tag.yellow { background: var(--yellow-soft); color: #8a6200; }
+.tag.blue { background: var(--blue-soft); color: var(--blue); }
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }

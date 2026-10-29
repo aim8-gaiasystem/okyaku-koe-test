@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1f8a4c">
+<title>ご意見・欲しい商品リクエスト</title>
+<link rel="stylesheet" href="/common.css">
+<style>
+  .bar-top { text-align: center; padding-bottom: 22px; }
+  .bar-top .in { flex-direction: column; gap: 6px; }
+  .bar-top h1 { font-size: 21px; }
+  .lead { font-size: 15px; opacity: .95; }
+  .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: -30px; margin-bottom: 14px; }
+  .tab {
+    padding: 14px 10px; border-radius: 16px; border: 2px solid var(--line); background: #fff; color: var(--ink);
+    font-size: 16px; font-weight: 800; line-height: 1.3; box-shadow: 0 2px 6px rgba(60,50,30,.08);
+  }
+  .tab small { display: block; font-size: 12px; font-weight: 400; color: var(--sub); margin-top: 2px; }
+  .tab.on { border-color: var(--orange); background: var(--orange-soft); color: var(--orange-dark); }
+  .stars { display: flex; gap: 6px; justify-content: center; }
+  .stars button { border: none; background: none; padding: 2px; color: #d9d2c3; }
+  .stars button svg { width: 40px; height: 40px; }
+  .stars button.on { color: var(--yellow); }
+  .stars-label { text-align: center; font-size: 14px; color: var(--sub); min-height: 1.4em; margin-top: 4px; }
+  .done { display: none; text-align: center; padding: 32px 16px; }
+  .done .big {
+    width: 72px; height: 72px; margin: 0 auto 12px; border-radius: 50%; background: var(--green-soft); color: var(--green);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .done .big svg { width: 38px; height: 38px; }
+  .done h2 { margin: 0 0 8px; font-size: 20px; }
+  .policy { font-size: 12px; color: var(--sub); line-height: 1.7; margin: 12px 4px 0; }
+  #item-wrap { display: none; }
+</style>
+</head>
+<body>
+<header class="bar-top">
+  <div class="in">
+    <div class="logo">声</div>
+    <h1 id="store">ご意見・リクエスト</h1>
+    <div class="lead">いただいた声は、品ぞろえやサービスづくりに活かします</div>
+  </div>
+</header>
+
+<main>
+  <div id="form">
+    <div class="tabs" id="tabs">
+      <button type="button" class="tab on" data-v="欲しい商品">欲しい商品<small>置いてほしいもの</small></button>
+      <button type="button" class="tab" data-v="ご意見・ご要望">ご意見・ご要望<small>お店へのひとこと</small></button>
+    </div>
+
+    <div class="card">
+      <div id="item-wrap">
+        <label class="ttl" for="item" style="margin-top:0">どんな商品ですか？</label>
+        <input type="text" id="item" maxlength="100" placeholder="例：米粉のパン、一人用のお刺身">
+        <label class="ttl" for="content">ひとこと <span class="note">（任意）</span></label>
+      </div>
+      <label class="ttl" for="content" id="content-label" style="margin-top:0">ご意見・ご要望</label>
+      <textarea id="content" maxlength="500" placeholder="例：夕方のレジが混んでいて、待ち時間が長いです"></textarea>
+
+      <label class="ttl" style="text-align:center">今日のお買い物はいかがでしたか？ <span class="note">（任意）</span></label>
+      <div class="stars" id="stars"></div>
+      <div class="stars-label" id="stars-label"></div>
+
+      <div class="hp" aria-hidden="true"><label>空欄のままにしてください<input type="text" id="website" tabindex="-1" autocomplete="off"></label></div>
+
+      <button class="btn" id="send" type="button">送る</button>
+      <div class="msg" id="msg"></div>
+    </div>
+
+    <p class="policy">
+      お名前・電話番号・メールアドレスなど、個人を特定できる内容は書かないでください。<br>
+      いただいた内容は、品ぞろえやサービスの改善のために使います。内容はAIで分類・集計します。<br>
+      個別のお返事はできません。お急ぎの件は、店舗のサービスカウンターへお声がけください。
+    </p>
+  </div>
+
+  <div class="card done" id="done">
+    <div class="big"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+    <h2>ありがとうございました</h2>
+    <p>いただいた声は、スタッフみんなで読ませていただきます。</p>
+    <button class="btn green" id="again" type="button">もうひとつ送る</button>
+  </div>
+</main>
+
+<script src="/common.js"></script>
+<script>
+  const { $, api } = Koe;
+  const code = new URLSearchParams(location.search).get('s') || '';
+  const STAR = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.2l-5.7 3.1 1.2-6.4-4.7-4.4 6.4-.8z"/></svg>';
+  const LABELS = ['', '不満', 'やや不満', 'ふつう', '満足', 'とても満足'];
+  let kind = '欲しい商品', rating = 0;
+
+  $('stars').innerHTML = [1, 2, 3, 4, 5].map((n) => `<button type="button" data-n="${n}" aria-label="${n}つ星（${LABELS[n]}）">${STAR}</button>`).join('');
+  $('stars').addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    const n = Number(b.dataset.n);
+    rating = rating === n ? 0 : n;
+    document.querySelectorAll('#stars button').forEach((x) => x.classList.toggle('on', Number(x.dataset.n) <= rating));
+    $('stars-label').textContent = LABELS[rating] || '';
+  });
+
+  function setKind(v) {
+    kind = v;
+    document.querySelectorAll('.tab').forEach((b) => b.classList.toggle('on', b.dataset.v === v));
+    const want = v === '欲しい商品';
+    $('item-wrap').style.display = want ? 'block' : 'none';
+    $('content-label').style.display = want ? 'none' : 'block';
+    $('content').placeholder = want ? '例：一人暮らしなので、少量のパックがあるとうれしいです' : '例：夕方のレジが混んでいて、待ち時間が長いです';
+    $('content').style.minHeight = want ? '80px' : '';
+    $('msg').textContent = '';
+  }
+  $('tabs').addEventListener('click', (e) => { const b = e.target.closest('.tab'); if (b) setKind(b.dataset.v); });
+  setKind(kind);
+
+  api(`/api/customer?s=${encodeURIComponent(code)}`, 'GET')
+    .then((d) => { $('store').textContent = `${d.name}へのご意見・リクエスト`; document.title = $('store').textContent; })
+    .catch((e) => { $('msg').textContent = e.message; $('send').disabled = true; });
+
+  $('send').addEventListener('click', async () => {
+    const item = $('item').value.trim(), content = $('content').value.trim();
+    $('msg').textContent = '';
+    if (kind === '欲しい商品' && !item) { $('msg').textContent = '欲しい商品を入力してください'; return; }
+    if (kind !== '欲しい商品' && !content) { $('msg').textContent = 'ご意見を入力してください'; return; }
+    $('send').disabled = true; $('send').textContent = '送っています…';
+    try {
+      await api('/api/customer', 'POST', {
+        s: code, kind, item: kind === '欲しい商品' ? item : '', content,
+        rating: rating || null, website: $('website').value,
+      });
+      $('form').style.display = 'none'; $('done').style.display = 'block';
+      window.scrollTo(0, 0);
+    } catch (e) { $('msg').textContent = e.message; }
+    $('send').disabled = false; $('send').textContent = '送る';
+  });
+
+  $('again').addEventListener('click', () => {
+    $('item').value = ''; $('content').value = ''; rating = 0;
+    document.querySelectorAll('#stars button').forEach((x) => x.classList.remove('on'));
+    $('stars-label').textContent = '';
+    $('done').style.display = 'none'; $('form').style.display = 'block';
+  });
+</script>
+</body>
+</html>

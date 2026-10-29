@@ -3,33 +3,30 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1f8a4c">
 <title>お客様の声メモ（管理者）</title>
+<link rel="stylesheet" href="/common.css">
 <style>
-  :root { --ink:#1f2328; --sub:#59636e; --line:#d0d7de; --bg:#f6f8fa; --accent:#1f6feb; --soft:#ddf4ff; --warn:#fff8c5; }
-  * { box-sizing: border-box; }
-  body { margin:0; font-family: -apple-system, "Hiragino Sans", "Yu Gothic", sans-serif; color:var(--ink); background:var(--bg); font-size:17px; line-height:1.6; }
-  main { max-width:680px; margin:0 auto; padding:16px; }
-  h1 { font-size:22px; margin:8px 0 12px; }
+  :root { --accent: var(--green); --soft: var(--green-soft); }
+  main { max-width:720px; }
+  .bar-top .in { max-width:720px; }
   h2 { font-size:18px; margin:20px 0 8px; }
   .tabs { display:flex; gap:8px; margin-bottom:16px; }
-  .tabs button { flex:1; margin:0; padding:12px; font-size:16px; background:#fff; color:var(--ink); border:1px solid var(--line); }
+  .tabs button { flex:1; margin:0; padding:12px; font-size:16px; background:#fff; color:var(--ink); border:2px solid var(--line); border-radius:12px; box-shadow:none; }
   .tabs button.on { background:var(--accent); color:#fff; border-color:var(--accent); }
-  .card { background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:16px; }
-  label.ttl { display:block; font-weight:bold; margin:12px 0 6px; }
-  label.ttl:first-child { margin-top:0; }
-  textarea, input, select { width:100%; font-size:17px; padding:12px; border:1px solid var(--line); border-radius:8px; font-family:inherit; background:#fff; }
-  textarea { min-height:110px; resize:vertical; }
-  button { width:100%; margin-top:12px; padding:14px; font-size:18px; font-weight:bold; color:#fff; background:var(--accent); border:none; border-radius:8px; }
-  button:disabled { opacity:.6; }
-  .chips { display:flex; flex-wrap:wrap; gap:8px; }
-  .chips button { width:auto; margin:0; padding:8px 14px; font-size:15px; font-weight:normal; background:#fff; color:var(--ink); border:1px solid var(--line); border-radius:999px; }
-  .chips button.on { background:var(--soft); color:#0550ae; border-color:#54aeff; font-weight:bold; }
-  .msg { margin-top:8px; font-size:15px; color:#cf222e; min-height:1em; }
-  .item { border-top:1px solid var(--line); padding:12px 0; }
-  .item:first-child { border-top:none; }
-  .tag { display:inline-block; font-size:13px; padding:2px 10px; border-radius:999px; background:var(--soft); color:#0550ae; margin:0 6px 4px 0; }
-  .tag.gray { background:#eaeef2; color:var(--sub); }
-  .tag.decl { background:#ffebe9; color:#a40e26; }
+    label.ttl:first-child { margin-top:0; }
+  .item { border-top:1px solid var(--line); padding:14px 0; display:flex; gap:12px; }
+  .item:first-child { border-top:none; padding-top:0; }
+  .item .body { flex:1; min-width:0; }
+  .item img { flex:none; width:84px; height:84px; object-fit:cover; border-radius:10px; cursor:zoom-in; }
+  .stars-s { color:var(--yellow); font-size:14px; letter-spacing:1px; }
+  .filters { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+  .filters .chips { gap:6px; }
+  .filters .chips button { padding:6px 12px; font-size:14px; }
+  .toplink { display:flex; gap:8px; margin-bottom:12px; }
+  .toplink a { flex:1; display:block; text-align:center; padding:12px; border-radius:12px; background:#fff; border:2px solid var(--line); color:var(--green-dark); font-weight:700; text-decoration:none; font-size:15px; }
+  .lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,.85); align-items:center; justify-content:center; padding:16px; z-index:10; }
+  .lightbox img { max-width:100%; max-height:100%; border-radius:8px; }
   .summary { font-weight:bold; }
   .meta { font-size:13px; color:var(--sub); margin-top:4px; }
   .raw { font-size:14px; color:var(--sub); margin-top:4px; white-space:pre-wrap; }
@@ -37,7 +34,7 @@
   .stat div { background:var(--bg); border-radius:8px; padding:10px; }
   .stat b { display:block; font-size:22px; }
   .bar { display:flex; align-items:center; gap:8px; font-size:15px; margin:4px 0; }
-  .bar span:first-child { width:80px; flex:none; }
+  .bar span:first-child { width:110px; flex:none; font-size:14px; }
   .bar i { display:block; height:12px; background:var(--accent); border-radius:6px; }
   .bar b, .bar em { white-space:nowrap; }
   .bar em { font-style:normal; color:var(--sub); font-size:13px; }
@@ -46,46 +43,51 @@
   ul { margin:4px 0; padding-left:20px; }
   .act { border:1px solid var(--line); border-radius:10px; padding:12px; margin:10px 0; }
   .act .head { display:flex; gap:10px; align-items:baseline; }
-  .act .rank { flex:none; width:28px; height:28px; border-radius:50%; background:var(--accent); color:#fff; font-weight:bold; display:flex; align-items:center; justify-content:center; font-size:15px; }
+  .act .rank { flex:none; width:28px; height:28px; border-radius:50%; background:var(--orange); color:#fff; font-weight:bold; display:flex; align-items:center; justify-content:center; font-size:15px; }
   .act .name { font-weight:bold; font-size:17px; }
   .act .scores { display:flex; flex-wrap:wrap; gap:6px; margin:8px 0; }
   .act .scores span { font-size:13px; background:var(--bg); border-radius:6px; padding:2px 8px; }
   .act .row { font-size:15px; margin:2px 0; }
   .act .row b { color:var(--sub); font-weight:normal; }
   .status { display:flex; gap:6px; margin-top:10px; }
-  .status button { flex:1; margin:0; padding:8px 4px; font-size:14px; font-weight:normal; background:#fff; color:var(--ink); border:1px solid var(--line); }
-  .status button.on { background:var(--soft); color:#0550ae; border-color:#54aeff; font-weight:bold; }
+  .status button { flex:1; margin:0; padding:8px 4px; font-size:14px; font-weight:normal; background:#fff; color:var(--ink); border:2px solid var(--line); border-radius:10px; }
+  .status button.on { background:var(--soft); color:var(--green-dark); border-color:var(--green); font-weight:bold; }
   .rv { border-left:4px solid #8c959f; padding:4px 0 4px 12px; margin:8px 0; font-size:15px; }
   #passbox, #page-report { display:none; }
 </style>
 </head>
 <body>
+<header class="bar-top">
+  <div class="in">
+    <div class="logo">声</div>
+    <div><h1>お客様の声メモ</h1><div class="small">管理者</div></div>
+  </div>
+</header>
 <main>
-  <h1>お客様の声メモ <span style="font-size:14px;color:#59636e">管理者</span></h1>
 
   <div class="card" id="passbox">
     <label class="ttl" for="pass">管理者の合言葉</label>
     <input id="pass" type="password" autocomplete="off">
-    <button id="passbtn" type="button">開く</button>
+    <button class="btn green" id="passbtn" type="button">開く</button>
   </div>
 
   <div class="tabs">
-    <button type="button" id="tab-record" class="on">記録する</button>
+    <button type="button" id="tab-record" class="on">集まった声</button>
     <button type="button" id="tab-report">月次レポート</button>
   </div>
 
   <section id="page-record">
-    <div class="card">
-      <label class="ttl" for="content">お客様の声・困りごと</label>
-      <textarea id="content" placeholder="例：お惣菜の量が多すぎて一人暮らしには買いにくい、と言われた"></textarea>
-      <label class="ttl">売場</label>
-      <div class="chips" id="sections"></div>
-      <label class="ttl">対応結果</label>
-      <div class="chips" id="outcomes"></div>
-      <button id="send" type="button">記録する</button>
-      <div class="msg" id="msg"></div>
+    <div class="toplink">
+      <a href="/" target="_blank">店員さんの入力画面</a>
+      <a href="/koe.html" target="_blank">お客様用の画面</a>
     </div>
-    <div class="card"><div id="list">読み込み中…</div></div>
+    <div class="card">
+      <div class="filters">
+        <div class="chips" id="f-source"></div>
+        <div class="chips" id="f-kind"></div>
+      </div>
+      <div id="list">読み込み中…</div>
+    </div>
   </section>
 
   <section id="page-report">
@@ -94,19 +96,21 @@
       <input id="month" type="month">
       <label class="ttl" for="context">お店の事情（任意）</label>
       <textarea id="context" style="min-height:80px" placeholder="例：夕方は人手が足りない。今月は設備にお金をかけられない。駐車場の工事は来年予定"></textarea>
-      <button id="make" type="button">この月のレポートを作る</button>
+      <button class="btn" id="make" type="button">この月のレポートを作る</button>
       <div class="msg" id="rmsg"></div>
     </div>
     <div class="card" id="report">月を選ぶと、作成済みのレポートが表示されます</div>
   </section>
 </main>
+<div class="lightbox" id="lightbox"><img id="lightbox-img" alt="写真"></div>
+<script src="/common.js"></script>
 <script>
   const SECTIONS = ['惣菜','青果','鮮魚','精肉','日配','加工食品','日用品','レジ','駐車場','その他'];
   const OUTCOMES = ['対応できた','お断りした','その他'];
   const $ = (id) => document.getElementById(id);
   let passcode = '';
   try { passcode = localStorage.getItem('adminPasscode') || ''; } catch (e) {}
-  let section = '', outcome = '';
+  let rows = [], fSource = '', fKind = '';
 
   function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
@@ -120,8 +124,8 @@
       onPick(on ? b.dataset.v : '');
     });
   }
-  chips($('sections'), SECTIONS, v => section = v);
-  chips($('outcomes'), OUTCOMES, v => outcome = v);
+  chips($('f-source'), ['店員から', 'お客様から'], v => { fSource = v; draw(); });
+  chips($('f-kind'), ['お客様の声', 'ありません', '困りごと', 'アイデア', '欲しい商品', 'ご意見・ご要望'], v => { fKind = v; draw(); });
 
   async function api(path, method, body) {
     const res = await fetch(path, {
@@ -135,33 +139,39 @@
     return data;
   }
 
+  const KIND_COLOR = { 'お客様の声': '', 'ありません': 'red', '困りごと': 'orange', 'アイデア': 'yellow', '欲しい商品': 'red', 'ご意見・ご要望': 'blue' };
+  function draw() {
+    const shown = rows.filter(r =>
+      (!fSource || (fSource === 'お客様から') === (r.source === 'customer')) &&
+      (!fKind || (r.kind || 'お客様の声') === fKind));
+    $('list').innerHTML = shown.length ? shown.map(r => {
+      const k = r.kind || 'お客様の声';
+      return `
+      <div class="item">
+        <div class="body">
+          <span class="tag ${r.source === 'customer' ? 'blue' : 'gray'}">${r.source === 'customer' ? 'お客様から' : '店員から'}</span><span class="tag ${KIND_COLOR[k] ?? ''}">${esc(k)}</span><span class="tag gray">${esc(r.category || '未分類')}</span>${r.section ? `<span class="tag gray">${esc(r.section)}</span>` : ''}${r.outcome ? `<span class="tag ${r.outcome === 'お断りした' ? 'red' : 'gray'}">${esc(r.outcome)}</span>` : ''}
+          <div class="summary">${esc(r.summary || '')}</div>
+          ${r.item ? `<div class="raw"><b>商品：</b>${esc(r.item)}</div>` : ''}
+          <div class="raw">${esc(r.content)}</div>
+          <div class="meta">${new Date(r.created_at).toLocaleString('ja-JP')}${r.rating ? `　<span class="stars-s">${stars(r.rating)}</span>` : ''}</div>
+        </div>
+        ${r.photo_url ? `<img src="${esc(r.photo_url)}" alt="添付写真" loading="lazy">` : ''}
+      </div>`; }).join('') : (rows.length ? '条件に合う声はありません' : 'まだ記録はありません');
+  }
+
   async function load() {
     try {
-      const rows = await api('/api/voices', 'GET');
+      rows = await api('/api/voices', 'GET');
       $('passbox').style.display = 'none';
-      $('list').innerHTML = rows.length ? rows.map(r => `
-        <div class="item">
-          <span class="tag">${esc(r.category || '未分類')}</span>${r.section ? `<span class="tag gray">${esc(r.section)}</span>` : ''}${r.outcome ? `<span class="tag ${r.outcome === 'お断りした' ? 'decl' : 'gray'}">${esc(r.outcome)}</span>` : ''}
-          <div class="summary">${esc(r.summary || '')}</div>
-          <div class="raw">${esc(r.content)}</div>
-          <div class="meta">${new Date(r.created_at).toLocaleString('ja-JP')}</div>
-        </div>`).join('') : 'まだ記録はありません';
+      draw();
     } catch (e) { $('list').textContent = e.message; }
   }
 
-  $('send').addEventListener('click', async () => {
-    const content = $('content').value.trim();
-    $('msg').textContent = '';
-    if (!content) { $('msg').textContent = '内容を入力してください'; return; }
-    $('send').disabled = true; $('send').textContent = 'AIが分類中…';
-    try {
-      await api('/api/voices', 'POST', { content, section, outcome });
-      $('content').value = '';
-      await load();
-    } catch (e) { $('msg').textContent = e.message; }
-    $('send').disabled = false; $('send').textContent = '記録する';
+  $('list').addEventListener('click', (e) => {
+    const img = e.target.closest('img'); if (!img) return;
+    $('lightbox-img').src = img.src; $('lightbox').style.display = 'flex';
   });
-  $('content').addEventListener('input', () => { $('msg').textContent = ''; });
+  $('lightbox').addEventListener('click', () => { $('lightbox').style.display = 'none'; });
 
   function bars(obj, prev) {
     const entries = Object.entries(obj).sort((a, b) => b[1] - a[1]);
@@ -255,7 +265,10 @@
       <div class="stat">
         <div>記録の件数<b>${s.total}件</b><span class="meta">前月 ${s.prevTotal}件</span></div>
         <div>お断りした件数<b>${s.byOutcome['お断りした'] || 0}件</b></div>
+        ${s.bySource ? `<div>お客様から直接<b>${s.bySource['お客様から'] || 0}件</b></div>` : ''}
+        ${s.rating ? `<div>お客様の満足度<b>${s.rating.avg} / 5</b><span class="meta">${s.rating.count}件の平均</span></div>` : ''}
       </div>
+      ${s.byKind ? `<h2>声の種類ごと</h2>${bars(s.byKind)}` : ''}
       <h2>分類ごと</h2>${bars(s.byCategory, s.prevByCategory)}
       <h2>売場ごと</h2>${bars(s.bySection)}
       <h2>注目テーマ</h2>
